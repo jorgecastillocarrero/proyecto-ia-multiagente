@@ -1,0 +1,14 @@
+# Ignorar todo por defecto
+*
+
+# Incluir solo archivos del proyecto IA Multi-Agente
+!.gitignore
+!generar_pdf_agentes.py
+!Proyecto_IA_MultiAgente_v6.pdf
+!PROYECTO_IA_MULTIAGENTE.md
+
+# Ignorar carpetas del sistema
+AppData/
+.cache/
+.config/
+anaconda3/
