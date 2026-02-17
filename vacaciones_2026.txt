@@ -1,0 +1,71 @@
++-----+--------------------+-----------------------+------------+---------+--------+----------+--------+--------+
+| Cod | Nombre             | Apellidos             | Periodo    | Corresp | Deveng | Invierno | Verano | Consum |
++-----+--------------------+-----------------------+------------+---------+--------+----------+--------+--------+
+| 0   | María José         | Castillo Carrero      | 01/01/2026 |      30 |      4 |       14 |      0 |     14 |
+| 002 | Dolores            | Morales Torres        | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 005 | Fernando Rafael    | Torralbo Acuña        | 01/01/2026 |      30 |      4 |        0 |      0 |      0 |
+| 009 | Miguel Ángel       | Heredia Yañez         | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 010 | Pedro              | Molina Fuentes        | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 012 | Eva María          | García Álvarez        | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 016 | Jesús Javier       | Raya Lozano           | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 019 | Silvia             | Sierra Sánchez        | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 020 | Miguel Ángel       | Ruiz Díaz             | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 021 | María Ángeles      | Medina Caballero      | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 024 | Virginia           | Jiménez Montalbán     | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 028 | Juan David         | Molero Sánchez        | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 029 | Manuel             | Solar Jordán          | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 030 | María Ángeles      | Muñoz Jiménez         | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 033 | Eva                | Serrano Juárez        | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 038 | Soledad            | León Fernández        | 01/01/2026 |      30 |      4 |        0 |      0 |      0 |
+| 041 | Laura              | Flores Moyano         | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 042 | Francisco José     | Boyer García          | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 047 | Rosario            | López Reina           | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 049 | Antonio José       | Porras López          | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 052 | Inmaculada         | Pérez Nogareda        | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 055 | Juan José          | Torres García         | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 059 | Francisco          | Soto Alcolea          | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 062 | Yesica             | Muñoz Oña             | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 063 | Ana Belén          | Pérez Mármol          | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 064 | Virtudes           | Osuna Roda            | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 071 | María del Puerto   | Navarro Otero         | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 074 | Antonio Jose       | Carmona Leal          | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 078 | Mónica             | Quesada Lucena        | 01/01/2026 |      30 |      4 |        0 |      0 |      0 |
+| 079 | María Cristina     | Martínez Tejada       | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 084 | Josefa             | Bellido Garrido       | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 094 | Rafael             | Espejo González       | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 095 | Alfredo David      | Ruiz Moral            | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 097 | Francisco          | Cabello Sánchez       | 01/01/2026 |      30 |      4 |        0 |      0 |      0 |
+| 104 | Juan Manuel        | Cervantes Carrasco    | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 106 | Jessica            | Ramírez Rasero        | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 110 | Alejandro          | Moreno Blanes         | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 111 | Cristina           | Moraleda Cerrato      | 01/01/2026 |      30 |      4 |        8 |      0 |      8 |
+| 122 | ANGELICA ELISABEHT | ALEJANDRO FARIAS      | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 126 | RAFAEL             | DUARTE CERRILLO       | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 150 | Jorge              | Castillo Carrero      | 01/01/2026 |      30 |      4 |        0 |      0 |      0 |
+| 160 | CARLOS             | FERNANDEZ HERNANDEZ   | 01/01/2026 |      30 |      4 |        0 |      0 |      0 |
+| 162 | ROCIO ISABEL       | GARCIA SANCHEZ        | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 164 | CLARA              | MUÑOZ HERRERA         | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 176 | FRANCISCO JAVIER   | ROMÁN CALER           | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 181 | ANA CRISTINA       | LEÓN JIMENEZ          | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 182 | DANIEL             | SOPEÑA COSSIO         | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 184 | MARIA JOSE         | BERNIER AFÁN          | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 209 | ISAAC              | MARCOS GONZÁLEZ       | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 211 | EMILIANA           | PATILLA CONSUEGRA     | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 213 | NICOLAS            | CASTRO RODRIGUEZ      | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 216 | MARIA              | LEÓN PEÑA             | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 217 | ANTONIO            | ROMÁN NAVARRO         | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 219 | JESUS              | GOMEZ BEJARANO        | 01/01/2026 |      30 |      4 |        0 |      0 |      0 |
+| 224 | SONIA              | GATA GARCIA           | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 227 | JAVIER             | CARMONA DUQUE         | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 234 | NATIVIDAD          | FERNÁNDEZ EXPOSITO    | 02/01/2026 |      30 |      4 |        0 |      0 |      0 |
+| 236 | ÁLVARO             | MUÑIZ CASTILLO        | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 247 | YOLANDA            | DEL FRESNO RODRÍGUEZ  | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 250 | RAFAEL             | UCLES OSUNA           | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 255 | ALEJANDRO          | LEÓN JIMÉNEZ          | 02/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 257 | JOSÉ ANTONIO       | VELASCO MADRID        | 13/01/2026 |      29 |      3 |       15 |      0 |     15 |
+| 258 | ÁNGEL              | ENCINAS MURILLO       | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 259 | HUGO               | AGUILAR PEÑA          | 01/01/2026 |      30 |      4 |       15 |      0 |     15 |
+| 266 | TOMÁS              | CABANILLAS SERRANO    | 02/01/2026 |      30 |      4 |        0 |      0 |      0 |
+| 272 | Haydeé Lucia       | Maltez Contreras      | 02/01/2026 |      30 |      4 |        0 |      0 |      0 |
+| 559 | JESÚS              | BERRAL VILLÉN         | 02/01/2026 |      30 |      4 |        0 |      0 |      0 |
++-----+--------------------+-----------------------+------------+---------+--------+----------+--------+--------+
