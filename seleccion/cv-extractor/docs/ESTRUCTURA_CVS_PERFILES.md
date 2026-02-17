@@ -329,6 +329,25 @@ ID |Nombre   |Apellido|Telefono   |Email               |Localid|Veh|B|C|CAP|Car|
                            Vuelve a PERFILES con marca DUDA
 ```
 
+**Nota**: El campo Duda permite multiples comentarios (historial de conversacion):
+```
++------------------------------------------+
+| HISTORIAL DE DUDAS - Candidato #65       |
++------------------------------------------+
+| 17/02 10:30 - Maria (Llamador):          |
+| "Pregunta si puede trabajar solo mañanas"|
++------------------------------------------+
+| 17/02 11:15 - Jorge (Selector):          |
+| "Si, turno de mañana disponible"         |
++------------------------------------------+
+| 17/02 14:00 - Maria (Llamador):          |
+| "Tambien pregunta por el sueldo"         |
++------------------------------------------+
+| 17/02 14:30 - Jorge (Selector):          |
+| "Segun convenio, se explica en entrev."  |
++------------------------------------------+
+```
+
 ### 8.6 Flujo de DUDAS
 
 ```
