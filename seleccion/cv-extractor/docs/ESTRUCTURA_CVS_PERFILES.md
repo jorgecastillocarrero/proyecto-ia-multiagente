@@ -461,7 +461,147 @@ Al hacer click en [CV] se abre el curriculum con los campos estructurados:
 +============================================+
 ```
 
-### 8.10 Roles en Segunda Fase
+### 8.10 Vista Completa Entrevista (Dia de la entrevista)
+
+El entrevistador ve toda la informacion del candidato:
+
+```
++============================================================================+
+|  ENTREVISTAS - Jorge                                                  0/20 |
++============================================================================+
+
++----------------------------------------------------------------------------+
+|  CANDIDATO: Adela Ruano                                    Fecha: 19/02/26 |
+|  Entrevista: Miercoles 10:00                               Dia: Mie        |
++----------------------------------------------------------------------------+
+|  ID: 65 | Telefono: 675 942 449 | Email: adelaruano@gmail.com              |
+|  Localidad: Cordoba | Veh: S | B: S | C: N | CAP: N | Carr: N              |
+|  Puesto: PESCADERIA | Exp: 20.3 anos | Estudios: -                         |
++----------------------------------------------------------------------------+
+|  CV: [+]                                                                   |
++----------------------------------------------------------------------------+
+|  HISTORIAL COMENTARIOS/DUDAS:                                              |
+|  17/02 10:30 - Maria (Llamador): "Pregunta si puede trabajar solo mananas" |
+|  17/02 11:15 - Jorge (Selector): "Si, turno de manana disponible"          |
++----------------------------------------------------------------------------+
+|  Resultado: [    v    ]                                                    |
++----------------------------------------------------------------------------+
+```
+
+**Campos visibles**:
+- Todos los datos del candidato (16 campos)
+- Fecha, Dia, Hora de entrevista
+- CV completo [+]
+- Historial de comentarios/dudas previas
+- Resultado (desplegable)
+
+### 8.11 Resultados de la Entrevista
+
+| Opcion | Accion |
+|--------|--------|
+| **Entrega Codigos** | Pasa la entrevista → abre comentarios → siguiente filtro |
+| **No** | Descartado → abre campo motivo |
+
+#### Si Resultado = Entrega Codigos
+```
++--------------------+     +---------------------------+
+| Entrega Codigos    | --> | Comentarios/Valoracion:   |
++--------------------+     | [________________________]|
+                           | [________________________]|
+                           +---------------------------+
+                                      |
+                                      v
+                           +---------------------------+
+                           | 1. Guarda valoracion      |
+                           | 2. Email auto al candidato|
+                           | 3. Pasa a siguiente filtro|
+                           +---------------------------+
+```
+
+**Registro guardado**:
+- fecha_entrevista: DATETIME
+- entrevistador_id: FK a rrhh_flujo_trabajadores
+- resultado: 'ENTREGA_CODIGOS'
+- valoracion: TEXT (comentarios del entrevistador)
+- fecha_registro: TIMESTAMP automatico
+
+#### Si Resultado = No
+```
++------------------+     +----------------------+
+| Resultado: [No]  | --> | Motivo: [    v     ] |
++------------------+     +----------------------+
+                                 |
+                         - No apto para el puesto
+                         - Falta de experiencia
+                         - No encaja con el equipo
+                         - Otros (especificar)
+                                 |
+                                 v
+                         DESCARTADOS
+                         (registra entrevistador + motivo + fecha)
+```
+
+### 8.12 Sistema de Codigos (Gaming)
+
+Cuando el candidato recibe "Entrega Codigos", se activa el sistema de aprendizaje:
+
+**Flujo automatico**:
+```
+Entrega Codigos (entrevista)
+         |
+         v
++------------------------------------------+
+|  EMAIL AUTOMATICO AL CANDIDATO           |
+|                                          |
+|  Para: adelaruano@gmail.com              |
+|  Asunto: Registro Pescados La Carihuela  |
+|                                          |
+|  Enlace para registrarse y acceder       |
+|  al sistema de codigos                   |
++------------------------------------------+
+         |
+         v
++------------------------------------------+
+|  CANDIDATO SE REGISTRA                   |
+|  - Introduce sus datos                   |
+|  - Accede al sistema de codigos          |
++------------------------------------------+
+         |
+         v
++------------------------------------------+
+|  SISTEMA GAMING - APRENDER CODIGOS       |
++------------------------------------------+
+```
+
+**Pantalla del juego**:
+```
++============================================+
+|  CODIGOS - Adela Ruano                    |
++============================================+
+|                                            |
+|  MODO PRACTICA                             |
+|                                            |
+|  Codigo: 90                                |
+|                                            |
+|  Cual es?                                  |
+|                                            |
+|  [ ] Lomo de Salmon                        |
+|  [x] Rodajas de Salmon  -> Correcto!       |
+|  [ ] Boquerones                            |
+|                                            |
+|  Racha: 5 seguidas                         |
+|  Aciertos hoy: 45/50 (90%)                 |
+|                                            |
++============================================+
+```
+
+**Caracteristicas del sistema**:
+- Preguntas tipo test con codigo y opciones
+- Practica ilimitada (gaming)
+- Registro de progreso y aciertos
+- El candidato practica hasta aprender los codigos
+
+### 8.13 Roles en Segunda Fase
 
 | Rol | Dashboard | Condicion | Funcion |
 |-----|-----------|-----------|---------|
