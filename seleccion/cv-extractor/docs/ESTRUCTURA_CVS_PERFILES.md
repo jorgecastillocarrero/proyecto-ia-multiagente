@@ -350,42 +350,51 @@ ID |Nombre   |Apellido|Telefono   |Email               |Localid|Veh|B|C|CAP|Car|
 
 ### 8.6 Flujo de DUDAS
 
+**Ejemplo con Maria (Llamador) y Jorge (Selector)**:
+
 ```
-LLAMADOR                              SELECTOR (Perfiles)
-+--------------------+
-| Entrevista: [Duda] |
-| Comentario: [____] |
-+--------------------+
+1. MARIA (Llamador) llama a candidato
+   Candidato pregunta: "¿Puedo trabajar solo mañanas?"
+   Maria no sabe → marca DUDA + escribe pregunta
          |
          v
-+--------------------+                +----------------------+
-| Vuelve a PERFILES  | -------------> | Ve candidato + DUDA  |
-| con marca DUDA     |                | Comentario llamador  |
-+--------------------+                +----------------------+
-                                               |
-                                      +--------+--------+
-                                      |                 |
-                                     SI                NO
-                                      |                 |
-                                      v                 v
-                              +----------------+  +------------------+
-                              | Abre campo     |  | DESCARTADO       |
-                              | comentario     |  | (automatico)     |
-                              | para responder |  +------------------+
-                              +----------------+
-                                      |
-                                      v
-+--------------------+        +----------------+
-| Vuelve a LLAMADAS  | <----- | Respuesta del  |
-| con respuesta      |        | selector       |
-+--------------------+        +----------------+
+2. JORGE (Selector) ve la duda en Perfiles
+   Lee: "Pregunta si puede trabajar solo mañanas"
+   Jorge decide:
+         |
+    +----+----+
+    |         |
+   SI        NO
+    |         |
+    v         v
+3a. JORGE marca Si        3b. JORGE marca No
+    + escribe respuesta       → DESCARTADO
+    "Si, turno manana
+    disponible"
          |
          v
-+--------------------+
-| Llamador vuelve a  |
-| llamar con la info |
-+--------------------+
+4. MARIA ve respuesta en Llamadas
+   Lee: "Si, turno manana disponible"
+         |
+         v
+5. MARIA llama de nuevo al candidato
+   Le dice: "Si, puede trabajar solo mananas"
+         |
+         v
+6. MARIA marca Si/No/Duda segun respuesta del candidato
 ```
+
+**Resumen flujo DUDA**:
+
+| Paso | Persona | Rol | Accion |
+|------|---------|-----|--------|
+| 1 | Maria | Llamador | Marca Duda + escribe comentario/pregunta |
+| 2 | Jorge | Selector | Ve duda en Perfiles |
+| 3a | Jorge | Selector | Si marca SI → escribe respuesta → vuelve a Llamadas |
+| 3b | Jorge | Selector | Si marca NO → candidato a Descartados |
+| 4 | Maria | Llamador | Ve respuesta del selector |
+| 5 | Maria | Llamador | Llama de nuevo con la informacion |
+| 6 | Maria | Llamador | Marca Si/No/Duda segun nueva respuesta |
 
 ### 8.7 Dashboard LLAMADOR
 
