@@ -46,7 +46,14 @@ ID |Nombre   |Apellido|Telefono   |Email               |Localid|B|C|CAP|Car|Pues
 | GESTION | grado ade, derecho, universidad, master | 0 |
 
 **NOTA IMPORTANTE**: Esta estructura de campos y flujo aplica a los 5 perfiles anteriores.
-Los candidatos **PENDIENTES (112)** no entran en este listado hasta que sean asignados a un perfil.
+
+### Candidatos PENDIENTES ASIGNAR (112)
+
+Los candidatos sin perfil asignado siguen este proceso:
+
+1. **Se aplican los filtros automaticos** (experiencia < 1 año, distancia > 40 km)
+2. **Si NO pasan** → Van a Descartados con motivo automatico
+3. **Si PASAN** → Se quedan en "Pendientes Asignar" hasta ser clasificados manualmente
 
 ---
 
