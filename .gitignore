@@ -16,6 +16,10 @@
 !portal-candidatos-carihuela/
 !portal-candidatos-carihuela/**
 
+# Modulo Seleccion (RRHH)
+!seleccion/
+!seleccion/**
+
 # Ignorar carpetas del sistema
 AppData/
 .cache/
