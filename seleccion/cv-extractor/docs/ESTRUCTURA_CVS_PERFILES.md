@@ -55,13 +55,14 @@ Los candidatos sin perfil asignado tienen los **mismos 15 campos**, pero:
 |----------------------|------------------------|
 | Entrevista (Si/No)   | Asignar (desplegable)  |
 
-**Desplegable Asignar**: PESCADERIA, LOGISTICA, PRODUCCION, ADMINISTRATIVO, GESTION
+**Desplegable Asignar**: PESCADERIA, LOGISTICA, PRODUCCION, ADMINISTRATIVO, GESTION, DESCARTADO
 
 **Flujo**:
 1. Se aplican los filtros automaticos (experiencia < 1 año, distancia > 40 km)
 2. Si NO pasan → Van a Descartados con motivo automatico
 3. Si PASAN → Se quedan en "Pendientes Asignar"
 4. Al seleccionar perfil en "Asignar" → Pasa al listado de ese perfil (con campo Entrevista)
+5. Al seleccionar "DESCARTADO" → Va a Descartados (registra usuario que descarto)
 
 ---
 
