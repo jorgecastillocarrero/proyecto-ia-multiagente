@@ -129,11 +129,18 @@ ON DUPLICATE KEY UPDATE descripcion = VALUES(descripcion);
 -- ALTER TABLE candidatos ADD COLUMN codigo_postal VARCHAR(10);
 -- ALTER TABLE candidatos ADD COLUMN puesto_actual VARCHAR(200);
 -- ALTER TABLE candidatos ADD COLUMN carnet_carretillero TINYINT(1) DEFAULT 0;
+-- ALTER TABLE candidatos ADD COLUMN vehiculo_propio TINYINT(1) DEFAULT 0;
+-- ALTER TABLE candidatos ADD COLUMN cap TINYINT(1) DEFAULT 0 COMMENT 'Certificado CAP';
 -- ALTER TABLE candidatos ADD COLUMN anos_experiencia DECIMAL(5,2);
+-- ALTER TABLE candidatos ADD COLUMN estudios_reglados VARCHAR(200) COMMENT 'Estudios reglados';
+-- ALTER TABLE candidatos ADD COLUMN curriculum TEXT COMMENT 'CV convertido/estructurado';
 -- ALTER TABLE candidatos ADD COLUMN archivo_origen VARCHAR(500);
 -- ALTER TABLE candidatos ADD COLUMN perfil_id INT;
 -- ALTER TABLE candidatos ADD COLUMN perfil_codigo VARCHAR(50);
+-- ALTER TABLE candidatos ADD COLUMN entrevista_primera_fase ENUM('SI', 'NO', 'PENDIENTE') DEFAULT 'PENDIENTE' COMMENT 'Decision primera fase';
+-- ALTER TABLE candidatos ADD COLUMN estado_seleccion ENUM('PENDIENTE_ASIGNAR', 'EN_PERFIL', 'LLAMADAS', 'ENTREVISTAS', 'CODIGOS', 'DESCARTADO', 'CONTRATADO') DEFAULT 'PENDIENTE_ASIGNAR';
 -- ALTER TABLE candidatos ADD INDEX idx_perfil (perfil_id);
+-- ALTER TABLE candidatos ADD INDEX idx_estado_seleccion (estado_seleccion);
 
 
 -- =============================================================================
@@ -153,23 +160,251 @@ FROM candidatos c
 GROUP BY c.perfil_codigo;
 
 
--- Vista: Candidatos con perfil
+-- Vista: Candidatos con perfil (16 campos documentados)
 CREATE OR REPLACE VIEW v_candidatos_perfil AS
 SELECT
     c.id,
-    CONCAT(c.nombre, ' ', c.apellido1, ' ', COALESCE(c.apellido2, '')) as nombre_completo,
-    c.email,
+    c.nombre,
+    c.apellido1 as apellido,
     c.telefono,
-    c.residencia as ciudad,
-    c.provincia,
-    c.puesto_actual,
-    c.anos_experiencia,
-    c.carnet_b,
-    c.carnet_c,
-    c.vehiculo_propio,
-    c.perfil_codigo,
-    c.estado_global
+    c.email,
+    c.residencia as localidad,
+    c.vehiculo_propio as veh,
+    c.carnet_b as b,
+    c.carnet_c as c_carnet,
+    c.cap,
+    c.carnet_carretillero as carr,
+    c.perfil_codigo as puesto,
+    c.anos_experiencia as exp,
+    c.estudios_reglados as estudios,
+    c.curriculum as cv,
+    c.entrevista_primera_fase as entrevista,
+    c.estado_seleccion
 FROM candidatos c;
+
+
+-- Vista: Candidatos para LLAMADAS (mismos 16 campos + historial)
+CREATE OR REPLACE VIEW v_llamadas AS
+SELECT
+    c.id,
+    c.nombre,
+    c.apellido1 as apellido,
+    c.telefono,
+    c.email,
+    c.residencia as localidad,
+    c.vehiculo_propio as veh,
+    c.carnet_b as b,
+    c.carnet_c as c_carnet,
+    c.cap,
+    c.carnet_carretillero as carr,
+    c.perfil_codigo as puesto,
+    c.anos_experiencia as exp,
+    c.estudios_reglados as estudios,
+    c.curriculum as cv,
+    al.resultado as entrevista,
+    al.trabajador_id as asignado_a,
+    al.fecha_asignacion,
+    al.intentos,
+    al.estado as estado_llamada
+FROM candidatos c
+INNER JOIN asignacion_llamadas al ON c.id = al.candidato_id
+WHERE c.estado_seleccion = 'LLAMADAS';
+
+
+-- Vista: ENTREVISTAS programadas
+CREATE OR REPLACE VIEW v_entrevistas AS
+SELECT
+    e.id as entrevista_id,
+    e.fecha_entrevista,
+    DAYNAME(e.fecha_entrevista) as dia,
+    TIME(e.fecha_entrevista) as hora,
+    c.id as candidato_id,
+    c.nombre,
+    c.apellido1 as apellido,
+    c.telefono,
+    c.email,
+    c.residencia as localidad,
+    c.vehiculo_propio as veh,
+    c.carnet_b as b,
+    c.carnet_c as c_carnet,
+    c.cap,
+    c.carnet_carretillero as carr,
+    c.perfil_codigo as puesto,
+    c.anos_experiencia as exp,
+    c.estudios_reglados as estudios,
+    c.curriculum as cv,
+    e.entrevistador_id,
+    e.estado as estado_entrevista,
+    e.resultado,
+    e.valoracion
+FROM entrevistas e
+INNER JOIN candidatos c ON e.candidato_id = c.id
+WHERE e.estado IN ('PROGRAMADA', 'REALIZADA');
+
+
+-- Vista: Dashboard contador llamadas por trabajador
+CREATE OR REPLACE VIEW v_dashboard_llamadas AS
+SELECT
+    al.trabajador_id,
+    COUNT(*) as total_asignadas,
+    SUM(CASE WHEN al.estado = 'COMPLETADA' THEN 1 ELSE 0 END) as completadas,
+    SUM(CASE WHEN al.estado = 'PENDIENTE' THEN 1 ELSE 0 END) as pendientes
+FROM asignacion_llamadas al
+GROUP BY al.trabajador_id;
+
+
+-- Vista: Dashboard contador entrevistas por entrevistador
+CREATE OR REPLACE VIEW v_dashboard_entrevistas AS
+SELECT
+    e.entrevistador_id,
+    COUNT(*) as total_entrevistas,
+    SUM(CASE WHEN e.estado = 'REALIZADA' THEN 1 ELSE 0 END) as realizadas,
+    SUM(CASE WHEN e.estado = 'PROGRAMADA' THEN 1 ELSE 0 END) as pendientes
+FROM entrevistas e
+GROUP BY e.entrevistador_id;
+
+
+-- =============================================================================
+-- TABLA: ASIGNACION DE LLAMADAS
+-- Asignacion de candidatos a trabajadores para llamar
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS asignacion_llamadas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    candidato_id BIGINT UNSIGNED NOT NULL COMMENT 'FK a candidatos',
+    trabajador_id INT NOT NULL COMMENT 'FK a rrhh_flujo_trabajadores (nivel=4, activo=1)',
+    fecha_asignacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    estado ENUM('PENDIENTE', 'EN_PROCESO', 'COMPLETADA') DEFAULT 'PENDIENTE',
+    resultado ENUM('SI', 'NO', 'DUDA') DEFAULT NULL COMMENT 'Resultado de la llamada',
+    fecha_entrevista DATETIME DEFAULT NULL COMMENT 'Si resultado=SI, fecha/hora de entrevista',
+    motivo_descarte_id INT DEFAULT NULL COMMENT 'Si resultado=NO, FK a motivos_descarte',
+    intentos INT DEFAULT 0 COMMENT 'Numero de intentos de llamada',
+    notas TEXT COMMENT 'Observaciones de la llamada',
+    fecha_completada TIMESTAMP NULL,
+
+    FOREIGN KEY (candidato_id) REFERENCES candidatos(id) ON DELETE CASCADE,
+    FOREIGN KEY (motivo_descarte_id) REFERENCES motivos_descarte(id),
+    INDEX idx_candidato (candidato_id),
+    INDEX idx_trabajador (trabajador_id),
+    INDEX idx_estado (estado),
+    INDEX idx_fecha (fecha_asignacion)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- TABLA: HISTORIAL DE DUDAS/COMENTARIOS
+-- Historial de conversacion entre llamador y selector
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS historial_dudas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    candidato_id BIGINT UNSIGNED NOT NULL COMMENT 'FK a candidatos',
+    asignacion_id INT DEFAULT NULL COMMENT 'FK a asignacion_llamadas',
+    usuario_id INT NOT NULL COMMENT 'FK a rrhh_flujo_trabajadores',
+    rol ENUM('LLAMADOR', 'SELECTOR', 'ENTREVISTADOR') NOT NULL,
+    comentario TEXT NOT NULL,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (candidato_id) REFERENCES candidatos(id) ON DELETE CASCADE,
+    FOREIGN KEY (asignacion_id) REFERENCES asignacion_llamadas(id) ON DELETE SET NULL,
+    INDEX idx_candidato (candidato_id),
+    INDEX idx_fecha (fecha)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- TABLA: ENTREVISTAS
+-- Registro de entrevistas programadas y realizadas
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS entrevistas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    candidato_id BIGINT UNSIGNED NOT NULL COMMENT 'FK a candidatos',
+    asignacion_llamada_id INT DEFAULT NULL COMMENT 'FK a asignacion_llamadas',
+    entrevistador_id INT NOT NULL COMMENT 'FK a rrhh_flujo_trabajadores',
+    fecha_entrevista DATETIME NOT NULL COMMENT 'Fecha y hora programada',
+    estado ENUM('PROGRAMADA', 'REALIZADA', 'NO_ASISTIO', 'CANCELADA') DEFAULT 'PROGRAMADA',
+    resultado ENUM('ENTREGA_CODIGOS', 'NO') DEFAULT NULL,
+    valoracion TEXT COMMENT 'Comentarios/valoracion del entrevistador',
+    motivo_descarte_id INT DEFAULT NULL COMMENT 'Si resultado=NO, FK a motivos_descarte',
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_realizacion TIMESTAMP NULL,
+
+    FOREIGN KEY (candidato_id) REFERENCES candidatos(id) ON DELETE CASCADE,
+    FOREIGN KEY (asignacion_llamada_id) REFERENCES asignacion_llamadas(id) ON DELETE SET NULL,
+    FOREIGN KEY (motivo_descarte_id) REFERENCES motivos_descarte(id),
+    INDEX idx_candidato (candidato_id),
+    INDEX idx_entrevistador (entrevistador_id),
+    INDEX idx_fecha (fecha_entrevista),
+    INDEX idx_estado (estado)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- TABLA: CANDIDATOS CON CODIGOS
+-- Candidatos que han pasado entrevista y estan aprendiendo codigos
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS candidatos_codigos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    candidato_id BIGINT UNSIGNED NOT NULL COMMENT 'FK a candidatos',
+    entrevista_id INT NOT NULL COMMENT 'FK a entrevistas',
+    email_enviado TINYINT(1) DEFAULT 0 COMMENT 'Email de registro enviado',
+    fecha_email TIMESTAMP NULL,
+    registrado TINYINT(1) DEFAULT 0 COMMENT 'Candidato se ha registrado',
+    fecha_registro TIMESTAMP NULL,
+    progreso_codigos INT DEFAULT 0 COMMENT 'Porcentaje de codigos aprendidos',
+    ultimo_acceso TIMESTAMP NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (candidato_id) REFERENCES candidatos(id) ON DELETE CASCADE,
+    FOREIGN KEY (entrevista_id) REFERENCES entrevistas(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_candidato (candidato_id),
+    INDEX idx_entrevista (entrevista_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- TABLA: CODIGOS DE ARTICULOS
+-- Catalogo de codigos que los candidatos deben aprender
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS codigos_articulos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    codigo VARCHAR(10) NOT NULL COMMENT 'Codigo del articulo (ej: 90)',
+    nombre VARCHAR(200) NOT NULL COMMENT 'Nombre del articulo',
+    categoria VARCHAR(100) COMMENT 'Categoria del producto',
+    activo TINYINT(1) DEFAULT 1,
+
+    UNIQUE KEY uk_codigo (codigo),
+    INDEX idx_categoria (categoria)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- TABLA: PROGRESO CODIGOS (Gaming)
+-- Registro de respuestas del candidato en el sistema de aprendizaje
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS progreso_codigos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    candidato_codigo_id INT NOT NULL COMMENT 'FK a candidatos_codigos',
+    codigo_articulo_id INT NOT NULL COMMENT 'FK a codigos_articulos',
+    aciertos INT DEFAULT 0,
+    fallos INT DEFAULT 0,
+    ultima_respuesta TIMESTAMP NULL,
+    aprendido TINYINT(1) DEFAULT 0 COMMENT 'Codigo considerado aprendido',
+
+    FOREIGN KEY (candidato_codigo_id) REFERENCES candidatos_codigos(id) ON DELETE CASCADE,
+    FOREIGN KEY (codigo_articulo_id) REFERENCES codigos_articulos(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_candidato_codigo (candidato_codigo_id, codigo_articulo_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- MOTIVOS DE DESCARTE ADICIONALES (para entrevistas)
+-- =============================================================================
+INSERT INTO motivos_descarte (codigo, descripcion, tipo) VALUES
+('NO_APTO_PUESTO', 'No apto para el puesto', 'MANUAL'),
+('FALTA_EXPERIENCIA', 'Falta de experiencia requerida', 'MANUAL'),
+('NO_ENCAJA_EQUIPO', 'No encaja con el equipo', 'MANUAL'),
+('NO_ASISTIO_ENTREVISTA', 'No asistio a la entrevista', 'MANUAL'),
+('NUMERO_ERRONEO', 'Numero de telefono erroneo', 'MANUAL')
+ON DUPLICATE KEY UPDATE descripcion = VALUES(descripcion);
 
 
 -- =============================================================================
