@@ -49,11 +49,19 @@ ID |Nombre   |Apellido|Telefono   |Email               |Localid|B|C|CAP|Car|Pues
 
 ### Candidatos PENDIENTES ASIGNAR (112)
 
-Los candidatos sin perfil asignado siguen este proceso:
+Los candidatos sin perfil asignado tienen los **mismos 15 campos**, pero:
 
-1. **Se aplican los filtros automaticos** (experiencia < 1 año, distancia > 40 km)
-2. **Si NO pasan** → Van a Descartados con motivo automatico
-3. **Si PASAN** → Se quedan en "Pendientes Asignar" hasta ser clasificados manualmente
+| Campo 15 en Perfiles | Campo 15 en Pendientes |
+|----------------------|------------------------|
+| Entrevista (Si/No)   | Asignar (desplegable)  |
+
+**Desplegable Asignar**: PESCADERIA, LOGISTICA, PRODUCCION, ADMINISTRATIVO, GESTION
+
+**Flujo**:
+1. Se aplican los filtros automaticos (experiencia < 1 año, distancia > 40 km)
+2. Si NO pasan → Van a Descartados con motivo automatico
+3. Si PASAN → Se quedan en "Pendientes Asignar"
+4. Al seleccionar perfil en "Asignar" → Pasa al listado de ese perfil (con campo Entrevista)
 
 ---
 
