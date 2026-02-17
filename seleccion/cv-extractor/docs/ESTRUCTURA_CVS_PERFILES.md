@@ -55,6 +55,16 @@ Los candidatos sin perfil asignado tienen los **mismos 15 campos**, pero:
 |----------------------|------------------------|
 | Entrevista (Si/No)   | Asignar (desplegable)  |
 
+**Ejemplo Visual**:
+```
+PENDIENTES ASIGNAR (112)
+ID |Nombre   |Apellido|Telefono   |Email               |Localid|B|C|CAP|Car|Puesto|Exp |Est|CV |Asignar
+---|---------|--------|-----------|--------------------| ------|–|–|---|---|------|----|-–-|---|--------
+ 12|Pedro    |Lopez   |666 123 456|pedrolopez@gmail.com|Montill|S|N|N  |N  |  -   | 3.2|ESO|[+]|[    v ]
+ 45|Carmen   |Jimenez |654 987 321|cjimenez@hotmail.es |Cordoba|S|N|N  |N  |  -   | 5.0|FP |[+]|[    v ]
+ 78|Francisco|Moreno  |622 555 888|fmoreno@yahoo.es    |Lucena |S|S|S  |N  |  -   | 8.1|BAC|[+]|[    v ]
+```
+
 **Desplegable Asignar**: PESCADERIA, LOGISTICA, PRODUCCION, ADMINISTRATIVO, GESTION, DESCARTADO
 
 **Flujo**:
@@ -142,6 +152,41 @@ Registro de descarte manual:
 |(2a Fase)  | |"Descartado por X"|
 +-----------+ +------------------+
 ```
+
+---
+
+## 7. Tabla de Descartados
+
+### Campos del Listado
+
+| # | Campo | Descripcion | Tipo BD |
+|---|-------|-------------|---------|
+| 1 | ID | Identificador | INT |
+| 2 | Nombre | Nombre candidato | VARCHAR |
+| 3 | Apellido | Apellido 1 | VARCHAR |
+| 4 | Telefono | Contacto | VARCHAR |
+| 5 | Email | Correo | VARCHAR |
+| 6 | Localidad | Ciudad | VARCHAR |
+| 7 | Perfil | Perfil donde estaba (o PENDIENTE) | VARCHAR |
+| 8 | Descartado por | AUTOMATICO o usuario (Jorge/Antonio/Carlos) | VARCHAR |
+| 9 | Motivo | Razon del descarte | VARCHAR |
+| 10 | Notas | Documentacion de entrevista (opcional) | TEXT |
+| 11 | Fecha | Timestamp automatico (dia + hora) | TIMESTAMP |
+
+### Ejemplo Visual
+
+```
+DESCARTADOS
+ID |Nombre   |Apellido|Telefono   |Email               |Localid|Perfil    |Descartado por|Motivo                              |Notas         |Fecha
+---|---------|--------|-----------|--------------------| ------|----------|--------------|------------------------------------|--------------|-----------
+ 23|Luis     |Ramirez |655 111 222|lramirez@gmail.com  |Jaen   |PENDIENTE |AUTOMATICO    |Vive a más de 40 km en coche        |-             |2026-02-17 14:35
+ 89|Maria    |Torres  |677 333 444|mtorres@hotmail.es  |Cordoba|LOGISTICA |Antonio       |Descartado en entrevista            |No encaja     |2026-02-16 10:20
+ 34|Jose     |Ruiz    |622 555 666|jruiz@yahoo.es      |Priego |PESCADERIA|Jorge         |No contesta tras varios intentos    |-             |2026-02-15 09:45
+112|Elena    |Sanchez |666 777 888|esanchez@gmail.com  |Montoro|PENDIENTE |AUTOMATICO    |Experiencia menor a 1 año           |-             |2026-02-14 16:10
+ 56|Pedro    |Gomez   |644 222 111|pgomez@gmail.com    |Cordoba|PRODUCCION|Carlos        |Descartado en entrevista            |Poca actitud  |2026-02-13 11:30
+```
+
+**Nota**: La fecha se registra automaticamente con timestamp cuando se guarda el descarte.
 
 ---
 
