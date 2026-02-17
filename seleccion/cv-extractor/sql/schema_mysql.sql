@@ -545,5 +545,152 @@ GROUP BY se.entrevistador_id;
 
 
 -- =============================================================================
+-- INTEGRACION ERP: CONTRATADO → OPERADORES
+-- =============================================================================
+
+-- Procedimiento para crear empleado en ERP cuando candidato es contratado
+DELIMITER //
+
+CREATE PROCEDURE IF NOT EXISTS sp_contratar_candidato(
+    IN p_candidato_id BIGINT UNSIGNED,
+    IN p_id_empresa CHAR(3),
+    IN p_categoria_profesional_id INT,
+    OUT p_operador_id INT
+)
+BEGIN
+    DECLARE v_nombre VARCHAR(100);
+    DECLARE v_apellido1 VARCHAR(100);
+    DECLARE v_apellido2 VARCHAR(100);
+    DECLARE v_email VARCHAR(255);
+    DECLARE v_telefono VARCHAR(20);
+    DECLARE v_dni VARCHAR(255);
+    DECLARE v_residencia VARCHAR(100);
+    DECLARE v_provincia VARCHAR(100);
+    DECLARE v_codigo_postal VARCHAR(10);
+
+    -- Obtener datos del candidato
+    SELECT nombre, apellido1, apellido2, email, telefono, dni,
+           residencia, provincia, codigo_postal
+    INTO v_nombre, v_apellido1, v_apellido2, v_email, v_telefono, v_dni,
+         v_residencia, v_provincia, v_codigo_postal
+    FROM candidatos
+    WHERE id = p_candidato_id;
+
+    -- Insertar en operadores (ERP)
+    INSERT INTO operadores (
+        Nombre,
+        Apellido1,
+        Apellido2,
+        email,
+        telefono,
+        Nif,
+        Poblacion,
+        Provincia,
+        Cp,
+        categoria_profesional_id,
+        idEmpresa,
+        activo,
+        borrado,
+        fecha_desde,
+        created_at
+    ) VALUES (
+        LEFT(v_nombre, 30),
+        LEFT(v_apellido1, 15),
+        LEFT(v_apellido2, 15),
+        v_email,
+        v_telefono,
+        v_dni,
+        LEFT(v_residencia, 50),
+        LEFT(v_provincia, 50),
+        LEFT(v_codigo_postal, 5),
+        p_categoria_profesional_id,
+        p_id_empresa,
+        1,  -- activo
+        0,  -- no borrado
+        CURDATE(),
+        NOW()
+    );
+
+    -- Obtener el ID del nuevo operador
+    SET p_operador_id = LAST_INSERT_ID();
+
+    -- Actualizar estado del candidato
+    UPDATE candidatos
+    SET estado_global = 'CONTRATADO',
+        updated_at = NOW()
+    WHERE id = p_candidato_id;
+
+    -- Registrar en historial
+    INSERT INTO historial_candidato (
+        candidato_id,
+        tipo_accion,
+        descripcion,
+        resultado
+    ) VALUES (
+        p_candidato_id,
+        'CONTRATADO',
+        CONCAT('Creado como operador ID: ', p_operador_id),
+        'CONTRATADO'
+    );
+
+    -- Insertar en tabla contratados
+    INSERT INTO contratados (
+        candidato_id,
+        segunda_entrevista_id,
+        perfil_contratado,
+        observaciones
+    ) VALUES (
+        p_candidato_id,
+        (SELECT MAX(id) FROM segundas_entrevistas WHERE candidato_id = p_candidato_id),
+        (SELECT perfil_codigo FROM candidatos WHERE id = p_candidato_id),
+        CONCAT('Operador ERP ID: ', p_operador_id)
+    );
+
+END //
+
+DELIMITER ;
+
+
+-- =============================================================================
+-- VISTA: Candidatos listos para contratar
+-- =============================================================================
+CREATE OR REPLACE VIEW v_listos_contratar AS
+SELECT
+    c.id,
+    c.nombre,
+    c.apellido1,
+    c.apellido2,
+    c.email,
+    c.telefono,
+    c.dni,
+    c.residencia,
+    c.provincia,
+    c.codigo_postal,
+    c.perfil_codigo,
+    se.fecha_entrevista as fecha_segunda_entrevista,
+    se.resultado,
+    se.valoracion
+FROM candidatos c
+INNER JOIN segundas_entrevistas se ON c.id = se.candidato_id
+WHERE se.resultado = 'CONTRATADO'
+AND c.estado_global != 'CONTRATADO';
+
+
+-- =============================================================================
+-- TABLA: Relacion candidato-operador
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS candidato_operador (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    candidato_id BIGINT UNSIGNED NOT NULL,
+    operador_id INT NOT NULL,
+    fecha_contratacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (candidato_id) REFERENCES candidatos(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_candidato (candidato_id),
+    INDEX idx_operador (operador_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
 -- FIN DEL SCHEMA
 -- =============================================================================

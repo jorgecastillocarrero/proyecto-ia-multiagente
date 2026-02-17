@@ -819,4 +819,73 @@ CONTRAT NO      DUDA --> QUEDA ENTREVISTAS
 
 ---
 
+## 11. Integracion ERP: CONTRATADO → OPERADORES
+
+### 11.1 Flujo de Contratacion
+
+Cuando un candidato pasa a CONTRATADO, se crea automaticamente un registro en la tabla `operadores` del ERP.
+
+```
+CONTRATADO (seleccion)
+         |
+         v
++---------------------------+
+| Crear registro en         |
+| tabla OPERADORES (ERP)    |
+| ID automatico             |
++---------------------------+
+         |
+         v
++---------------------------+
+| Candidato ahora es        |
+| EMPLEADO en el sistema    |
++---------------------------+
+```
+
+### 11.2 Mapeo de Campos: candidatos → operadores
+
+| Campo CANDIDATOS | Campo OPERADORES | Tipo |
+|------------------|------------------|------|
+| nombre | Nombre | char(30) |
+| apellido1 | Apellido1 | char(15) |
+| apellido2 | Apellido2 | char(15) |
+| email | email | varchar(255) |
+| telefono | telefono | varchar(255) |
+| dni | Nif | varchar(255) |
+| residencia | Poblacion | varchar(50) |
+| provincia | Provincia | varchar(50) |
+| codigo_postal | Cp | char(5) |
+| perfil_codigo | categoria_profesional_id | int (FK) |
+| - | activo | 1 (nuevo empleado) |
+| - | idEmpresa | (config) |
+| - | fecha_desde | fecha contratacion |
+| - | created_at | timestamp auto |
+
+### 11.3 Campos que se generan automaticamente
+
+| Campo OPERADORES | Valor |
+|------------------|-------|
+| id | AUTO_INCREMENT |
+| activo | 1 |
+| borrado | 0 |
+| created_at | CURRENT_TIMESTAMP |
+| fecha_desde | Fecha de contratacion |
+| idEmpresa | Segun configuracion |
+
+### 11.4 Campos adicionales a completar
+
+Estos campos se completan despues de la contratacion:
+
+| Campo | Descripcion |
+|-------|-------------|
+| login | Usuario para acceso al sistema |
+| Password | Contraseña inicial |
+| categoria_profesional_id | Categoria segun perfil |
+| tcontrato | Tipo de contrato |
+| horas_semana | Horas semanales |
+| fecha_nacimiento | Fecha nacimiento |
+| NAF | Numero Afiliacion SS |
+
+---
+
 *Documento generado: 2026-02-17*
