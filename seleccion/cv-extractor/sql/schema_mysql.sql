@@ -408,5 +408,142 @@ ON DUPLICATE KEY UPDATE descripcion = VALUES(descripcion);
 
 
 -- =============================================================================
+-- TABLA: HISTORIAL CANDIDATO (Ficha completa)
+-- Registro de todas las acciones sobre un candidato
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS historial_candidato (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    candidato_id BIGINT UNSIGNED NOT NULL COMMENT 'FK a candidatos',
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tipo_accion ENUM(
+        'ASIGNACION_PERFIL',
+        'SELECCION_ENTREVISTA',
+        'LLAMADA',
+        'DUDA_LLAMADA',
+        'RESPUESTA_DUDA',
+        'ENTREVISTA_1',
+        'ENTREGA_CODIGOS',
+        'LLAMADA_2A_ENTREVISTA',
+        'ENTREVISTA_2',
+        'CONTRATADO',
+        'DESCARTADO'
+    ) NOT NULL,
+    usuario_id INT COMMENT 'FK a rrhh_flujo_trabajadores',
+    usuario_nombre VARCHAR(100) COMMENT 'Nombre del usuario',
+    descripcion TEXT COMMENT 'Descripcion de la accion',
+    comentarios TEXT COMMENT 'Comentarios adicionales',
+    resultado VARCHAR(50) COMMENT 'Resultado de la accion (SI/NO/DUDA/CONTRATADO/etc)',
+
+    FOREIGN KEY (candidato_id) REFERENCES candidatos(id) ON DELETE CASCADE,
+    INDEX idx_candidato (candidato_id),
+    INDEX idx_fecha (fecha),
+    INDEX idx_tipo (tipo_accion)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- TABLA: SEGUNDA ENTREVISTA
+-- Registro de segundas entrevistas (post-codigos)
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS segundas_entrevistas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    candidato_id BIGINT UNSIGNED NOT NULL COMMENT 'FK a candidatos',
+    primera_entrevista_id INT NOT NULL COMMENT 'FK a entrevistas (primera)',
+    entrevistador_id INT NOT NULL COMMENT 'FK a rrhh_flujo_trabajadores',
+    fecha_entrevista DATETIME NOT NULL COMMENT 'Fecha y hora programada',
+    estado ENUM('PROGRAMADA', 'REALIZADA', 'NO_ASISTIO', 'CANCELADA') DEFAULT 'PROGRAMADA',
+    resultado ENUM('CONTRATADO', 'NO', 'DUDA') DEFAULT NULL,
+    valoracion TEXT COMMENT 'Comentarios/valoracion del entrevistador',
+    motivo_descarte_id INT DEFAULT NULL COMMENT 'Si resultado=NO, FK a motivos_descarte',
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_realizacion TIMESTAMP NULL,
+
+    FOREIGN KEY (candidato_id) REFERENCES candidatos(id) ON DELETE CASCADE,
+    FOREIGN KEY (primera_entrevista_id) REFERENCES entrevistas(id) ON DELETE CASCADE,
+    FOREIGN KEY (motivo_descarte_id) REFERENCES motivos_descarte(id),
+    INDEX idx_candidato (candidato_id),
+    INDEX idx_entrevistador (entrevistador_id),
+    INDEX idx_fecha (fecha_entrevista),
+    INDEX idx_estado (estado)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- TABLA: CONTRATADOS
+-- Candidatos que han completado el proceso de seleccion
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS contratados (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    candidato_id BIGINT UNSIGNED NOT NULL COMMENT 'FK a candidatos',
+    segunda_entrevista_id INT NOT NULL COMMENT 'FK a segundas_entrevistas',
+    fecha_contratacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    perfil_contratado VARCHAR(50) COMMENT 'Perfil para el que fue contratado',
+    observaciones TEXT COMMENT 'Observaciones finales',
+
+    FOREIGN KEY (candidato_id) REFERENCES candidatos(id) ON DELETE CASCADE,
+    FOREIGN KEY (segunda_entrevista_id) REFERENCES segundas_entrevistas(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_candidato (candidato_id),
+    INDEX idx_fecha (fecha_contratacion)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- VISTA: Ficha completa del candidato
+-- =============================================================================
+CREATE OR REPLACE VIEW v_ficha_candidato AS
+SELECT
+    c.id,
+    c.nombre,
+    c.apellido1 as apellido,
+    c.telefono,
+    c.email,
+    c.residencia as localidad,
+    c.perfil_codigo as perfil,
+    c.estado_seleccion,
+    c.anos_experiencia as experiencia,
+    (SELECT COUNT(*) FROM historial_candidato hc WHERE hc.candidato_id = c.id) as total_acciones,
+    (SELECT MAX(fecha) FROM historial_candidato hc WHERE hc.candidato_id = c.id) as ultima_accion
+FROM candidatos c;
+
+
+-- =============================================================================
+-- VISTA: Historial detallado del candidato
+-- =============================================================================
+CREATE OR REPLACE VIEW v_historial_detalle AS
+SELECT
+    hc.candidato_id,
+    hc.fecha,
+    hc.tipo_accion,
+    hc.usuario_nombre,
+    hc.descripcion,
+    hc.comentarios,
+    hc.resultado
+FROM historial_candidato hc
+ORDER BY hc.candidato_id, hc.fecha;
+
+
+-- =============================================================================
+-- VISTA: Dashboard segundas entrevistas
+-- =============================================================================
+CREATE OR REPLACE VIEW v_dashboard_segundas_entrevistas AS
+SELECT
+    se.entrevistador_id,
+    COUNT(*) as total_entrevistas,
+    SUM(CASE WHEN se.estado = 'REALIZADA' THEN 1 ELSE 0 END) as realizadas,
+    SUM(CASE WHEN se.estado = 'PROGRAMADA' THEN 1 ELSE 0 END) as pendientes
+FROM segundas_entrevistas se
+GROUP BY se.entrevistador_id;
+
+
+-- =============================================================================
+-- ACTUALIZAR ESTADO CANDIDATOS
+-- =============================================================================
+-- ALTER TABLE candidatos MODIFY COLUMN estado_seleccion
+--     ENUM('PENDIENTE_ASIGNAR', 'EN_PERFIL', 'LLAMADAS', 'ENTREVISTAS', 'CODIGOS',
+--          'LLAMADA_2A', 'SEGUNDA_ENTREVISTA', 'CONTRATADO', 'DESCARTADO')
+--     DEFAULT 'PENDIENTE_ASIGNAR';
+
+
+-- =============================================================================
 -- FIN DEL SCHEMA
 -- =============================================================================

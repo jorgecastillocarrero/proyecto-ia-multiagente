@@ -621,4 +621,202 @@ Entrega Codigos (entrevista)
 
 ---
 
+## 9. Tercera Fase: SEGUNDA ENTREVISTA
+
+### 9.1 Flujo Post-Codigos
+
+Despues de que el candidato practica los codigos (gaming), se le llama para concertar segunda entrevista.
+
+```
+GAMING CODIGOS (candidato practica)
+         |
+         v
++---------------------------+
+| LLAMADA PARA              |
+| SEGUNDA ENTREVISTA        |
+| (misma persona u otra)    |
++---------------------------+
+         |
+    +----+----+----+
+    |    |        |
+   SI   NO      DUDA
+    |    |        |
+    v    v        v
++----+ +----+ +--------+
+|2a  | |DESC| |PERFILES|
+|ENTR| |    | |(duda)  |
++----+ +----+ +--------+
+```
+
+### 9.2 Segunda Entrevista - Resultados
+
+```
+SEGUNDA ENTREVISTA
+         |
+    +----+----+----+
+    |    |        |
+CONTRAT DUDA     NO
+    |    |        |
+    v    v        v
++----+ +------+ +----+
+|CONT| |QUEDA | |DESC|
+|RAT | |ENTREV| |    |
+|ADO | |(com.)| +----+
++----+ +------+
+```
+
+**Resultados**:
+| Opcion | Accion |
+|--------|--------|
+| Contratado | Pasa a CONTRATADOS (fin proceso) |
+| Duda | Se queda en ENTREVISTAS con comentarios |
+| No | Descartado con motivo |
+
+### 9.3 DUDA en Entrevistas vs Llamadas
+
+| Fase | Si es DUDA |
+|------|------------|
+| Llamadas | Vuelve a PERFILES (flujo Maria/Jorge) |
+| Entrevistas | Se queda en ENTREVISTAS con comentarios |
+
+### 9.4 Ficha del Candidato
+
+Todos los comentarios se guardan en la ficha del candidato:
+
+```
++============================================+
+|  FICHA CANDIDATO - Adela Ruano            |
++============================================+
+|  DATOS PERSONALES                          |
+|  ID: 65 | Perfil: PESCADERIA               |
+|  Telefono: 675 942 449                     |
+|  Email: adelaruano@gmail.com               |
++--------------------------------------------+
+|  HISTORIAL COMPLETO                        |
++--------------------------------------------+
+|  15/02 - Asignada a perfil PESCADERIA      |
+|  16/02 - Seleccionada para entrevista (Si) |
+|  16/02 - Llamada por Maria                 |
+|  16/02 - Duda: "Pregunta turno mananas"    |
+|  16/02 - Jorge: "Si, turno disponible"     |
+|  17/02 - Llamada OK, cita 19/02 10:00      |
+|  19/02 - 1a Entrevista: Entrega Codigos    |
+|  19/02 - Valoracion: "Buena actitud"       |
+|  22/02 - Llamada 2a entrevista: 25/02      |
+|  25/02 - 2a Entrevista: CONTRATADO         |
++--------------------------------------------+
+|  RESULTADO FINAL: CONTRATADO               |
+|  Fecha: 25/02/2026                         |
++============================================+
+```
+
+**Queda registrado**:
+- Todos los comentarios de llamadas
+- Todas las dudas y respuestas
+- Valoraciones de entrevistas
+- Resultado final (Contratado o Descartado)
+
+---
+
+## 10. FLUJO COMPLETO
+
+```
++------------------+
+|  ENTRADA CVs     |
+|  (InfoJobs/Email)|
++------------------+
+         |
+         v
++------------------+
+|  FILTROS AUTO    |
+|  - Exp < 1 ano   |
+|  - Dist > 40 km  |
++------------------+
+         |
+    +----+----+
+    |         |
+   PASA      NO --> DESCARTADOS (auto)
+    |
+    v
++------------------+
+|  PENDIENTES      |
+|  ASIGNAR         |
++------------------+
+         |
+         v (Asignar perfil)
++------------------+
+|  CVs POR PERFIL  |
+|  Entrevista      |
+|  Si/No           |
++------------------+
+         |
+    +----+----+
+    |         |
+   SI        NO --> DESCARTADOS (manual)
+    |
+    v
++------------------+
+|  LLAMADAS PARA   |
+|  ENTREVISTAS     |
+|  Si/No/Duda      |
++------------------+
+         |
+    +----+----+----+
+    |    |        |
+   SI   NO      DUDA --> PERFILES
+    |    |
+    |    v
+    |  DESCARTADOS
+    v
++------------------+
+|  1a ENTREVISTA   |
+|  Codigos/No/Duda |
++------------------+
+         |
+    +----+----+----+
+    |    |        |
+ CODIGOS NO     DUDA --> QUEDA ENTREVISTAS
+    |    |
+    |    v
+    |  DESCARTADOS
+    v
++------------------+
+|  GAMING CODIGOS  |
+|  (practica)      |
++------------------+
+         |
+         v
++------------------+
+|  LLAMADA 2a      |
+|  ENTREVISTA      |
+|  Si/No/Duda      |
++------------------+
+         |
+    +----+----+----+
+    |    |        |
+   SI   NO      DUDA --> PERFILES
+    |    |
+    |    v
+    |  DESCARTADOS
+    v
++------------------+
+|  2a ENTREVISTA   |
+|  Contrat/No/Duda |
++------------------+
+         |
+    +----+----+----+
+    |    |        |
+CONTRAT NO      DUDA --> QUEDA ENTREVISTAS
+    |    |
+    |    v
+    |  DESCARTADOS
+    v
++------------------+
+|  CONTRATADO      |
+|  (fin proceso)   |
++------------------+
+```
+
+---
+
 *Documento generado: 2026-02-17*
