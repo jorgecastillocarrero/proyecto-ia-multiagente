@@ -1,5 +1,5 @@
 """
-Cargador de CVs extraídos a PostgreSQL.
+Cargador de CVs extraídos a MySQL.
 Lee archivos JSON generados por extract_cvs.py e inserta los datos en la BD.
 """
 
@@ -9,24 +9,25 @@ import re
 from datetime import date
 from pathlib import Path
 
-import psycopg2
+import pymysql
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configuración de la base de datos
+# Configuración de la base de datos MySQL
 DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "localhost"),
-    "port": os.getenv("DB_PORT", "5432"),
-    "dbname": os.getenv("DB_NAME", "cvs_db"),
-    "user": os.getenv("DB_USER", "cvs_user"),
-    "password": os.getenv("DB_PASSWORD", "cvs_password_2024"),
+    "host": os.getenv("DB_HOST", "192.168.1.133"),
+    "port": int(os.getenv("DB_PORT", "3306")),
+    "database": os.getenv("DB_NAME", "gestion.pescadoslacarihuela.es"),
+    "user": os.getenv("DB_USER", "root"),
+    "password": os.getenv("DB_PASSWORD", ""),
+    "charset": "utf8mb4",
 }
 
 
 def get_connection():
-    """Crea una conexión a PostgreSQL."""
-    return psycopg2.connect(**DB_CONFIG)
+    """Crea una conexión a MySQL."""
+    return pymysql.connect(**DB_CONFIG)
 
 
 def parse_date(date_str: str | None) -> date | None:
@@ -50,41 +51,75 @@ def insert_candidato(cur, cv_data: dict, archivo_origen: str = None) -> int:
 
     # Determinar carnets
     carnet = datos_cand.get("carnet_conducir", "")
-    carnet_b = "B" in str(carnet).upper() if carnet else False
-    carnet_c = "C" in str(carnet).upper() if carnet else False
-    vehiculo = datos_cand.get("vehiculo_propio", False)
+    carnet_b = 1 if "B" in str(carnet).upper() else 0
+    carnet_c = 1 if "C" in str(carnet).upper() else 0
+    vehiculo = 1 if datos_cand.get("vehiculo_propio", False) else 0
 
-    cur.execute("""
-        INSERT INTO candidatos (
-            nombre, puesto_actual, codigo_postal, ciudad, provincia,
-            email, telefono, vehiculo_propio, carnet_b, carnet_c, cap,
-            carnet_carretillero, archivo_origen
-        ) VALUES (
-            %(nombre)s, %(puesto_actual)s, %(codigo_postal)s, %(ciudad)s, %(provincia)s,
-            %(email)s, %(telefono)s, %(vehiculo_propio)s, %(carnet_b)s, %(carnet_c)s, FALSE,
-            FALSE, %(archivo_origen)s
-        )
-        ON CONFLICT (email) DO UPDATE SET
-            nombre = EXCLUDED.nombre,
-            puesto_actual = EXCLUDED.puesto_actual,
-            telefono = EXCLUDED.telefono,
-            fecha_importacion = CURRENT_TIMESTAMP
-        RETURNING id
-    """, {
-        "nombre": datos.get("nombre"),
-        "puesto_actual": datos.get("puesto_actual"),
-        "codigo_postal": datos.get("codigo_postal"),
-        "ciudad": datos.get("ciudad"),
-        "provincia": datos.get("provincia"),
-        "email": datos.get("email"),
-        "telefono": datos.get("telefono"),
-        "vehiculo_propio": vehiculo,
-        "carnet_b": carnet_b,
-        "carnet_c": carnet_c,
-        "archivo_origen": archivo_origen,
-    })
+    # Separar nombre y apellidos
+    nombre_completo = datos.get("nombre", "")
+    partes = nombre_completo.split() if nombre_completo else []
+    nombre = partes[0] if len(partes) > 0 else ""
+    apellido1 = partes[1] if len(partes) > 1 else ""
+    apellido2 = " ".join(partes[2:]) if len(partes) > 2 else ""
 
-    return cur.fetchone()[0]
+    # Verificar si existe por email
+    email = datos.get("email", "")
+    cur.execute("SELECT id FROM candidatos WHERE email = %s", (email,))
+    existing = cur.fetchone()
+
+    if existing:
+        candidato_id = existing[0]
+        cur.execute("""
+            UPDATE candidatos SET
+                nombre = %s,
+                apellido1 = %s,
+                apellido2 = %s,
+                telefono = %s,
+                residencia = %s,
+                carnet_b = %s,
+                carnet_c = %s,
+                vehiculo_propio = %s,
+                updated_at = NOW()
+            WHERE id = %s
+        """, (
+            nombre,
+            apellido1,
+            apellido2,
+            datos.get("telefono"),
+            datos.get("ciudad"),
+            carnet_b,
+            carnet_c,
+            vehiculo,
+            candidato_id
+        ))
+    else:
+        cur.execute("""
+            INSERT INTO candidatos (
+                nombre, apellido1, apellido2, telefono, email,
+                residencia, carnet_b, carnet_c, vehiculo_propio,
+                dni, categoria_id, estado_global, created_at
+            ) VALUES (
+                %s, %s, %s, %s, %s,
+                %s, %s, %s, %s,
+                %s, %s, %s, NOW()
+            )
+        """, (
+            nombre,
+            apellido1,
+            apellido2,
+            datos.get("telefono"),
+            email,
+            datos.get("ciudad"),
+            carnet_b,
+            carnet_c,
+            vehiculo,
+            "",  # dni vacío por ahora
+            1,   # categoria_id default
+            "NUEVO"
+        ))
+        candidato_id = cur.lastrowid
+
+    return candidato_id
 
 
 def insert_experiencias(cur, candidato_id: int, experiencias: list):
@@ -92,44 +127,86 @@ def insert_experiencias(cur, candidato_id: int, experiencias: list):
     if not experiencias:
         return
 
-    cur.execute("DELETE FROM experiencias WHERE candidato_id = %s", (candidato_id,))
+    # Verificar si existe la tabla experiencias_candidatos
+    cur.execute("""
+        SELECT COUNT(*) FROM information_schema.tables
+        WHERE table_schema = DATABASE() AND table_name = 'experiencias_candidatos'
+    """)
+    if cur.fetchone()[0] == 0:
+        # Crear tabla si no existe
+        cur.execute("""
+            CREATE TABLE experiencias_candidatos (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                candidato_id BIGINT UNSIGNED NOT NULL,
+                puesto VARCHAR(200),
+                empresa VARCHAR(200),
+                fecha_inicio DATE,
+                fecha_fin DATE,
+                duracion_anos DECIMAL(4,2),
+                tipo_contrato VARCHAR(100),
+                descripcion TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_candidato (candidato_id),
+                FOREIGN KEY (candidato_id) REFERENCES candidatos(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """)
+
+    # Eliminar experiencias anteriores
+    cur.execute("DELETE FROM experiencias_candidatos WHERE candidato_id = %s", (candidato_id,))
 
     for exp in experiencias:
         duracion = exp.get("duracion_meses")
         duracion_anos = round(duracion / 12.0, 2) if duracion else None
 
         cur.execute("""
-            INSERT INTO experiencias (
+            INSERT INTO experiencias_candidatos (
                 candidato_id, puesto, empresa, fecha_inicio, fecha_fin,
                 duracion_anos, tipo_contrato, descripcion
             ) VALUES (
-                %(candidato_id)s, %(puesto)s, %(empresa)s, %(fecha_inicio)s, %(fecha_fin)s,
-                %(duracion_anos)s, %(tipo_contrato)s, %(descripcion)s
+                %s, %s, %s, %s, %s, %s, %s, %s
             )
-        """, {
-            "candidato_id": candidato_id,
-            "puesto": exp.get("puesto"),
-            "empresa": exp.get("empresa"),
-            "fecha_inicio": parse_date(exp.get("fecha_inicio")),
-            "fecha_fin": parse_date(exp.get("fecha_fin")),
-            "duracion_anos": duracion_anos,
-            "tipo_contrato": exp.get("tipo_contrato"),
-            "descripcion": exp.get("descripcion"),
-        })
+        """, (
+            candidato_id,
+            exp.get("puesto"),
+            exp.get("empresa"),
+            parse_date(exp.get("fecha_inicio")),
+            parse_date(exp.get("fecha_fin")),
+            duracion_anos,
+            exp.get("tipo_contrato"),
+            exp.get("descripcion"),
+        ))
 
 
+def insert_conocimientos(cur, candidato_id: int, conocimientos: list):
+    """Inserta los conocimientos de un candidato."""
+    if not conocimientos:
+        return
 
-
-
-
-def update_total_experiencia(cur, candidato_id: int):
-    """Actualiza el total de años de experiencia del candidato."""
+    # Verificar si existe la tabla
     cur.execute("""
-        UPDATE candidatos SET total_anos_experiencia = (
-            SELECT ROUND(COALESCE(SUM(duracion_anos), 0), 2)
-            FROM experiencias WHERE candidato_id = %s
-        ) WHERE id = %s
-    """, (candidato_id, candidato_id))
+        SELECT COUNT(*) FROM information_schema.tables
+        WHERE table_schema = DATABASE() AND table_name = 'conocimientos_candidato'
+    """)
+    if cur.fetchone()[0] == 0:
+        cur.execute("""
+            CREATE TABLE conocimientos_candidato (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                candidato_id BIGINT UNSIGNED NOT NULL,
+                conocimiento VARCHAR(200),
+                INDEX idx_candidato (candidato_id),
+                FOREIGN KEY (candidato_id) REFERENCES candidatos(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """)
+
+    # Eliminar conocimientos anteriores
+    cur.execute("DELETE FROM conocimientos_candidato WHERE candidato_id = %s", (candidato_id,))
+
+    for conocimiento in conocimientos:
+        if conocimiento:
+            cur.execute("""
+                INSERT INTO conocimientos_candidato (candidato_id, conocimiento)
+                VALUES (%s, %s)
+            """, (candidato_id, conocimiento[:200]))
 
 
 def load_cv_to_db(cv_data: dict, archivo_origen: str = None) -> int:
@@ -139,7 +216,7 @@ def load_cv_to_db(cv_data: dict, archivo_origen: str = None) -> int:
         with conn.cursor() as cur:
             candidato_id = insert_candidato(cur, cv_data, archivo_origen)
             insert_experiencias(cur, candidato_id, cv_data.get("experiencias", []))
-            update_total_experiencia(cur, candidato_id)
+            insert_conocimientos(cur, candidato_id, cv_data.get("conocimientos", []))
 
             conn.commit()
             return candidato_id
@@ -155,7 +232,6 @@ def generate_placeholder_email(nombre: str) -> str:
     """Genera un email placeholder único para candidatos sin email."""
     import hashlib
     import time
-    # Crear hash único basado en nombre y timestamp
     unique_str = f"{nombre}_{time.time()}"
     hash_suffix = hashlib.md5(unique_str.encode()).hexdigest()[:8]
     return f"sin_email_{hash_suffix}@sin.email"
@@ -189,19 +265,42 @@ def load_json_file(json_path: str) -> list[int]:
     return ids
 
 
+def test_connection():
+    """Prueba la conexión a MySQL."""
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT VERSION()")
+            version = cur.fetchone()[0]
+            print(f"Conectado a MySQL: {version}")
+
+            cur.execute("SELECT COUNT(*) FROM candidatos")
+            count = cur.fetchone()[0]
+            print(f"Candidatos en BD: {count}")
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error de conexión: {e}")
+        return False
+
+
 def main():
     """CLI para cargar CVs."""
     import sys
 
     if len(sys.argv) < 2:
         print("Uso:")
+        print("  python db_loader.py test                    # Probar conexión")
         print("  python db_loader.py load <archivo.json>     # Cargar CVs")
         print("  python db_loader.py load-all                # Cargar todos los JSON")
         sys.exit(1)
 
     command = sys.argv[1]
 
-    if command == "load":
+    if command == "test":
+        test_connection()
+
+    elif command == "load":
         if len(sys.argv) < 3:
             print("Error: Especifica el archivo JSON a cargar")
             sys.exit(1)
