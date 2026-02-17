@@ -190,4 +190,85 @@ ID |Nombre   |Apellido|Telefono   |Email               |Localid|Perfil    |Desca
 
 ---
 
+## 8. Segunda Fase: ENTREVISTAS
+
+### 8.1 Flujo de Asignacion de Llamadas
+
+Cuando un candidato pasa a Entrevista (Entrevista = Si), se genera automaticamente una asignacion de llamada.
+
+```
++---------------------------+
+| Entrevista = Si           |
++---------------------------+
+           |
+           v
++---------------------------+
+| VERIFICAR DISPONIBILIDAD  |
+| Consultar:                |
+| - rrhh_flujo_trabajadores |
+|   (nivel = 4, activo = 1) |
+| - Cuadrante semanal       |
++---------------------------+
+           |
+     +-----+-----+
+     |           |
+    SI          NO
+     |           |
+     v           v
++-----------+ +------------------+
+| Asignar   | | ERROR:           |
+| llamada a | | "No hay personal |
+| trabajador| | disponible en    |
++-----------+ | nivel 4 o no     |
+     |        | está en cuadrante"|
+     v        +------------------+
++-----------+
+| Trabajador|
+| llama y   |
+| concierta |
+| entrevista|
++-----------+
+```
+
+**Condiciones para asignar llamada**:
+1. El trabajador debe estar en `rrhh_flujo_trabajadores` con `nivel = 4`
+2. El trabajador debe tener `activo = 1`
+3. El trabajador debe aparecer en el **cuadrante semanal** del día
+
+### 8.2 Tabla: asignacion_llamadas
+
+| Campo | Descripcion | Tipo BD |
+|-------|-------------|---------|
+| id | Identificador | INT |
+| candidato_id | FK a candidatos | INT |
+| trabajador_id | FK a rrhh_flujo_trabajadores | INT |
+| fecha_asignacion | Timestamp automatico | TIMESTAMP |
+| estado | PENDIENTE / REALIZADA / NO_CONTESTA | ENUM |
+| intentos | Numero de intentos de llamada | INT |
+| notas | Observaciones de la llamada | TEXT |
+
+### 8.3 Tabla: entrevistas
+
+| Campo | Descripcion | Tipo BD |
+|-------|-------------|---------|
+| id | Identificador | INT |
+| candidato_id | FK a candidatos | INT |
+| llamada_id | FK a asignacion_llamadas | INT |
+| fecha_entrevista | Fecha y hora programada | DATETIME |
+| entrevistador_id | FK a rrhh_flujo_trabajadores | INT |
+| estado | PROGRAMADA / REALIZADA / NO_ASISTIO | ENUM |
+| resultado | PASA / DESCARTADO | ENUM |
+| notas | Observaciones de la entrevista | TEXT |
+
+### 8.4 Roles en Segunda Fase
+
+| Rol | Tabla | Condicion | Funcion |
+|-----|-------|-----------|---------|
+| Llamador | rrhh_flujo_trabajadores | nivel=4, activo=1, en cuadrante | Llama y concierta cita |
+| Entrevistador | rrhh_flujo_trabajadores | (por definir) | Realiza la entrevista |
+
+**Nota**: El llamador y el entrevistador pueden ser personas diferentes.
+
+---
+
 *Documento generado: 2026-02-17*
