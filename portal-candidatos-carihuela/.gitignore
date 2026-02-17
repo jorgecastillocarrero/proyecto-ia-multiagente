@@ -1,0 +1,13 @@
+# Dependencias - se regeneran con npm install
+node_modules/
+
+# Logs
+logs/
+*.log
+
+# Build
+dist/
+.angular/
+
+# Environment (contiene credenciales)
+.env

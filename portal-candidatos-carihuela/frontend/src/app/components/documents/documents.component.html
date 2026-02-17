@@ -1,0 +1,211 @@
+<div class="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
+  <div class="max-w-7xl mx-auto">
+
+    <header class="flex flex-col md:flex-row justify-between items-center mb-10 pb-6 border-b border-slate-200 gap-6">
+      <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-left">
+        <a routerLink="/" class="transition-opacity hover:opacity-80">
+          <img src="assets/img/logo-carihuela.png" alt="La Carihuela" class="h-10 sm:h-12 w-auto object-contain">
+        </a>
+        <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+        <h1 class="text-xl sm:text-2xl font-semibold tracking-tight text-slate-700">
+          {{ t().documents.portalTitle }}
+        </h1>
+      </div>
+      <div class="flex items-center">
+        <app-profile-dropdown (logoutClicked)="logout()"
+          (privacyPolicyClicked)="navigateToPrivacyPolicy()"></app-profile-dropdown>
+      </div>
+    </header>
+
+    @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center min-h-[400px] animate-in fade-in">
+      <app-loading-spinner [size]="'lg'"></app-loading-spinner>
+      <p class="mt-4 text-slate-500 font-medium">Verificando estado...</p>
+    </div>
+    }
+    @else {
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-300">
+
+      <div class="lg:col-span-1 space-y-8 order-2 lg:order-1">
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+          <h2 class="text-xl font-semibold text-slate-700 mb-2">{{ t().documents.downloads.title }}</h2>
+          <p class="text-sm text-slate-500 mb-6">{{ t().documents.downloads.description }}</p>
+
+          <div class="space-y-4">
+            <div
+              class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border border-slate-200 hover:border-[#003366] hover:bg-slate-50 transition-all">
+              <div class="flex items-center gap-3 min-w-0">
+                <div
+                  class="flex-shrink-0 h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                  </svg>
+                </div>
+                <p class="font-medium text-slate-700 truncate text-sm">{{ t().documents.downloads.codeSheet }}</p>
+              </div>
+              <a href="/assets/docs/listado-codigos-la-carihuela.xlsx" download="listado-codigos-la-carihuela.xlsx"
+                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#003366] text-white text-sm font-medium rounded-md hover:bg-[#002244] transition-colors">
+                <span>{{ t().documents.downloads.download }}</span>
+              </a>
+            </div>
+
+            <div [class]="'flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border transition-all' + 
+              (formCompleted() ? ' border-green-200 bg-green-50/30' : 'border-slate-200 hover:border-[#003366] hover:bg-slate-50')">
+
+              <div class="flex items-center gap-3 min-w-0">
+                <div [class]="'flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ' + 
+                              (formCompleted() ? ' bg-green-100 text-green-600' : 'bg-slate-100 text-slate-600')">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+
+                <div class="min-w-0">
+                  <p class="font-medium text-slate-700 text-sm truncate">{{ t().documents.downloads.form }}</p>
+                  @if (formCompleted()) {
+                  <span
+                    class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800 uppercase tracking-wider">
+                    {{ t().documents.downloads.completed }}
+                  </span>
+                  }
+                </div>
+              </div>
+
+              <button (click)="navigateToForm()"
+                [class]="'w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-md transition-colors ' + 
+                        (formCompleted() ? ' bg-green-600 text-white hover:bg-green-700' : 'bg-[#003366] text-white hover:bg-slate-800')">
+                {{ formCompleted() ? t().documents.downloads.completed : t().documents.downloads.startForm }}
+              </button>
+            </div>
+
+            <div
+              [class]="'flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border transition-all' + 
+                          (examStatus() === 'passed' ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:border-[#003366]')">
+              <div class="flex items-center gap-3 min-w-0">
+                <div
+                  [class]="'flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ' + 
+                              (examStatus() === 'passed' ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-600')">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <p class="font-medium text-slate-700 text-sm truncate">{{ t().documents.downloads.exam }}</p>
+                  @if (examStatus() === 'passed') {
+                  <span
+                    class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800 uppercase tracking-wider">
+                    {{ t().documents.downloads.examStatus.passed }}
+                  </span>
+                  }
+                </div>
+              </div>
+              <button (click)="navigateToExam()" [disabled]="examStatus() === 'passed'"
+                [class]="'w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-md transition-colors ' + 
+                (examStatus() === 'passed' ? 'bg-green-600 text-white cursor-default' : 'bg-[#003366] text-white hover:bg-slate-800')">
+                {{ examStatus() === 'passed' ? t().documents.downloads.completed : t().documents.downloads.startExam }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-2 order-1 lg:order-2">
+
+        @if (documentsUploaded()) {
+        <div
+          class="bg-white p-12 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center text-center justify-center min-h-[400px]">
+          <div
+            class="h-24 w-24 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-6 border-4 border-green-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 class="text-2xl font-bold text-slate-800 mb-3">{{ t().documents.statusStates.submitted.title }}</h2>
+          <p class="text-slate-500 max-w-md mb-8 leading-relaxed">
+            {{ t().documents.statusStates.submitted.description }}
+            <br><span class="font-semibold text-slate-700">{{ t().documents.statusStates.submitted.subtext }}</span>
+          </p>
+          <div class="bg-slate-50 px-6 py-3 rounded-lg border border-slate-200">
+            <p class="text-sm text-slate-600 font-medium">
+              {{ t().documents.statusStates.submitted.statusLabel }}
+              <span class="text-[#003366]">{{ t().documents.statusStates.submitted.statusValue }}</span>
+            </p>
+          </div>
+        </div>
+        }
+
+        @else if (examStatus() === 'passed') {
+        <div class="bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-slate-100 animate-in fade-in">
+          <div class="mb-8 text-left">
+            <h2 class="text-xl font-semibold text-slate-700">{{ t().documents.uploads.title }}</h2>
+            <p class="text-sm text-slate-500 mt-2">{{ t().documents.subtitle }}</p>
+          </div>
+
+          <form [formGroup]="documentsForm" (ngSubmit)="onSubmit()" class="space-y-6">
+            <div class="grid grid-cols-1 gap-6">
+              <app-file-input [label]="t().documents.dniCopy" controlId="dni-upload"
+[hasError]="!!(dniCopy?.invalid && dniCopy?.touched)"
+                (fileChanged)="documentsForm.get('dniCopy')?.setValue($event)"></app-file-input>
+              <div class="space-y-1">
+                <app-file-input [label]="t().documents.youthGuarantee" controlId="youth-upload"
+                  (fileChanged)="documentsForm.get('youthGuarantee')?.setValue($event)"></app-file-input>
+                <p class="text-xs text-slate-400 pl-1 italic font-sans">{{ t().documents.youthGuaranteeSubtext }}
+                  (Opcional)</p>
+              </div>
+              <app-file-input [label]="t().documents.jobSeeker" controlId="jobseeker-upload"
+[hasError]="!!(jobSeeker?.invalid && jobSeeker?.touched)"
+                (fileChanged)="documentsForm.get('jobSeeker')?.setValue($event)"></app-file-input>
+              <app-file-input [label]="t().documents.degreeCopy" controlId="degree-upload"
+[hasError]="!!(degreeCopy?.invalid && degreeCopy?.touched)"
+                (fileChanged)="documentsForm.get('degreeCopy')?.setValue($event)"></app-file-input>
+              <app-file-input [label]="t().documents.foodHandlerCertificate" controlId="food-upload"
+[hasError]="!!(foodHandlerCertificate?.invalid && foodHandlerCertificate?.touched)"
+                (fileChanged)="documentsForm.get('foodHandlerCertificate')?.setValue($event)"></app-file-input>
+            </div>
+
+            <div class="pt-4">
+              <button type="submit" [disabled]="documentsForm.invalid || isLoading()"
+                class="w-full flex justify-center items-center py-4 px-6 rounded-lg text-white font-bold bg-[#003366] hover:bg-[#002244] disabled:bg-slate-200 disabled:text-slate-400 transition-all shadow-md active:scale-[0.98]">
+                <span>{{ t().documents.submit }}</span>
+              </button>
+            </div>
+          </form>
+        </div>
+        }
+
+        @else {
+        <div
+          class="bg-white p-12 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center text-center justify-center min-h-[400px]">
+          <div
+            class="h-20 w-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-6 border-4 border-slate-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h2 class="text-2xl font-bold text-slate-800 mb-3">{{ t().documents.statusStates.blocked.title }}</h2>
+          <p class="text-slate-500 max-w-sm mb-8 leading-relaxed font-sans">{{
+            t().documents.statusStates.blocked.description }}</p>
+          <button (click)="navigateToExam()"
+            class="inline-flex items-center gap-2 px-8 py-3 bg-[#003366] text-white font-bold rounded-lg hover:bg-[#002244] transition-all shadow-lg active:scale-95 font-sans">
+            <span>{{ t().documents.statusStates.blocked.actionButton }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </button>
+        </div>
+        }
+
+      </div>
+    </div>
+    }
+  </div>
+</div>

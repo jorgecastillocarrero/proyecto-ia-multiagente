@@ -7,6 +7,15 @@
 !Proyecto_IA_MultiAgente_v6.pdf
 !PROYECTO_IA_MULTIAGENTE.md
 
+# Modulo RRHH
+!RRHH_Flujo_Trabajadores_Contrato.md
+!RRHH_Flujo_Trabajadores_Contrato.html
+!vacaciones_2026.txt
+
+# Portal Candidatos
+!portal-candidatos-carihuela/
+!portal-candidatos-carihuela/**
+
 # Ignorar carpetas del sistema
 AppData/
 .cache/
