@@ -24,7 +24,8 @@ PERFILES = {
     "PESCADERIA": {
         "keywords": [
             "pescad", "carnicer", "charcuter", "corte", "filete",
-            "marisco", "mostrador", "fresco", "despiece"
+            "marisco", "mostrador", "fresco", "despiece",
+            "dependient", "tienda", "comercio"
         ],
         "requiere_carnet_c": False,
         "descripcion": "Pescadería, carnicería, comercio de frescos"
@@ -58,11 +59,11 @@ PERFILES = {
     },
     "GESTION": {
         "keywords": [
-            "encargado", "responsable", "jefe", "supervisor",
-            "coordinador", "gerente", "director", "manager"
+            "grado ade", "grado derecho", "licenciado", "graduado",
+            "master", "mba", "universidad"
         ],
         "requiere_carnet_c": False,
-        "descripcion": "Gestión, grados universitarios, puestos de responsabilidad"
+        "descripcion": "Gestión, grados universitarios (ADE, Derecho, etc.)"
     }
 }
 
