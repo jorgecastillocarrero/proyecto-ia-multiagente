@@ -387,12 +387,86 @@ LLAMADOR                              SELECTOR (Perfiles)
 +--------------------+
 ```
 
-### 8.7 Roles en Segunda Fase
+### 8.7 Dashboard LLAMADOR
 
-| Rol | Tabla | Condicion | Funcion |
-|-----|-------|-----------|---------|
-| Llamador | rrhh_flujo_trabajadores | nivel=4, activo=1, en cuadrante | Llama y concierta cita |
-| Entrevistador | rrhh_flujo_trabajadores | (por definir) | Realiza la entrevista |
+```
++============================================+
+|  DASHBOARD LLAMADOR - Maria               |
++============================================+
+|  +------------------------------------+   |
+|  |  LLAMADAS PARA ENTREVISTAS         |   |
+|  |           0/20                      |   |
+|  +------------------------------------+   |
++============================================+
+```
+
+El contador se actualiza automaticamente al marcar Si, No o Duda (0/20 → 1/20 → 2/20...)
+
+### 8.8 Dashboard ENTREVISTADOR
+
+```
++============================================+
+|  DASHBOARD ENTREVISTADOR - Jorge          |
++============================================+
+|  +------------------------------------+   |
+|  |  ENTREVISTAS              0/20     |   |
+|  +------------------------------------+   |
+|                                            |
+|  Fecha      |Dia |Hora |Nombre   |Apellido|CV |
+|  -----------|----|-----|---------|--------|---|
+|  19/02/2026 |Mie |10:00|Adela    |Ruano   |[+]|
+|  19/02/2026 |Mie |11:30|Angela   |Navarro |[+]|
+|  20/02/2026 |Jue |09:00|Francisco|Moreno  |[+]|
+|  20/02/2026 |Jue |12:00|Carmen   |Jimenez |[+]|
+|                                            |
++============================================+
+```
+
+El contador se actualiza automaticamente al marcar Si, No o Duda.
+
+**Campo Resultado en Entrevistas**:
+| Opcion | Accion |
+|--------|--------|
+| Si | Se mantiene en ENTREVISTAS |
+| No | DESCARTADOS (con motivo) |
+| Duda | PERFILES con marca duda (historial comentarios) |
+
+### 8.9 Vista CV (click en [+])
+
+Al hacer click en [CV] se abre el curriculum con los campos estructurados:
+
+```
++============================================+
+|  CV CANDIDATO - Adela Ruano               |
++============================================+
+|  ID: 65                                    |
+|  Nombre: Adela                             |
+|  Apellido: Ruano                           |
+|  Telefono: 675 942 449                     |
+|  Email: adelaruano1269@gmail.com           |
+|  Localidad: Cordoba                        |
+|  Vehiculo propio: Si                       |
+|  Carnet B: Si                              |
+|  Carnet C: No                              |
+|  CAP: No                                   |
+|  Carretillero: No                          |
+|  Puesto: PESCADERIA                        |
+|  Experiencia: 20.3 anos                    |
+|  Estudios: -                               |
+|                                            |
+|  EXPERIENCIAS DETALLADAS:                  |
+|  - Pescaderia Lopez (2015-2024) 9 anos    |
+|  - Carniceria Martinez (2010-2015) 5 anos |
+|  - Supermercado Dia (2004-2010) 6 anos    |
++============================================+
+```
+
+### 8.10 Roles en Segunda Fase
+
+| Rol | Dashboard | Condicion | Funcion |
+|-----|-----------|-----------|---------|
+| Llamador | Llamadas para Entrevistas | nivel=4, activo=1, en cuadrante | Llama y concierta cita |
+| Entrevistador | Entrevistas | (por definir) | Realiza la entrevista |
 
 **Nota**: El llamador y el entrevistador pueden ser personas diferentes.
 
