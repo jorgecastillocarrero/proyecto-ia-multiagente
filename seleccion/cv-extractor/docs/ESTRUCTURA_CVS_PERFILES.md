@@ -872,7 +872,60 @@ CONTRATADO (seleccion)
 | fecha_desde | Fecha de contratacion |
 | idEmpresa | Segun configuracion |
 
-### 11.4 Campos adicionales a completar
+### 11.4 Flujo Completo de Contratacion
+
+```
+CONTRATADO
+    |
+    v
++---------------------------+
+| 1. Crear OPERADORES       |
+|    ID automatico          |
+|    Datos del candidato    |
++---------------------------+
+    |
+    v
++---------------------------+
+| 2. Crear CONTRATOS_USUARIO|
+|    ID = ultimo + 1        |
+|    user_id = operador.id  |
++---------------------------+
+    |
+    v
++---------------------------+
+| 3. Actualizar CANDIDATOS  |
+|    estado = CONTRATADO    |
++---------------------------+
+    |
+    v
++---------------------------+
+| 4. Registrar HISTORIAL    |
++---------------------------+
+    |
+    v
++---------------------------+
+| 5. Crear relacion         |
+|    candidato_operador     |
++---------------------------+
+```
+
+### 11.5 Procedimiento SQL
+
+```sql
+CALL sp_contratar_candidato(
+    p_candidato_id,           -- ID del candidato
+    p_id_empresa,             -- Empresa (ej: '001')
+    p_categoria_profesional_id, -- Categoria
+    p_horas_semana,           -- Horas/semana
+    p_tcontrato,              -- Tipo contrato
+    p_dias,                   -- Dias trabajo
+    p_horario,                -- Horario
+    @operador_id,             -- OUT: ID operador creado
+    @contrato_id              -- OUT: ID contrato creado
+);
+```
+
+### 11.6 Campos adicionales a completar
 
 Estos campos se completan despues de la contratacion:
 
@@ -880,9 +933,6 @@ Estos campos se completan despues de la contratacion:
 |-------|-------------|
 | login | Usuario para acceso al sistema |
 | Password | Contraseña inicial |
-| categoria_profesional_id | Categoria segun perfil |
-| tcontrato | Tipo de contrato |
-| horas_semana | Horas semanales |
 | fecha_nacimiento | Fecha nacimiento |
 | NAF | Numero Afiliacion SS |
 

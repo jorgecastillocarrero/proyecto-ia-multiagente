@@ -555,7 +555,12 @@ CREATE PROCEDURE IF NOT EXISTS sp_contratar_candidato(
     IN p_candidato_id BIGINT UNSIGNED,
     IN p_id_empresa CHAR(3),
     IN p_categoria_profesional_id INT,
-    OUT p_operador_id INT
+    IN p_horas_semana INT,
+    IN p_tcontrato INT,
+    IN p_dias VARCHAR(255),
+    IN p_horario VARCHAR(255),
+    OUT p_operador_id INT,
+    OUT p_contrato_id BIGINT
 )
 BEGIN
     DECLARE v_nombre VARCHAR(100);
@@ -576,7 +581,7 @@ BEGIN
     FROM candidatos
     WHERE id = p_candidato_id;
 
-    -- Insertar en operadores (ERP)
+    -- 1. Insertar en operadores (ERP)
     INSERT INTO operadores (
         Nombre,
         Apellido1,
@@ -591,6 +596,8 @@ BEGIN
         idEmpresa,
         activo,
         borrado,
+        horas_semana,
+        tcontrato,
         fecha_desde,
         created_at
     ) VALUES (
@@ -607,6 +614,8 @@ BEGIN
         p_id_empresa,
         1,  -- activo
         0,  -- no borrado
+        p_horas_semana,
+        p_tcontrato,
         CURDATE(),
         NOW()
     );
@@ -614,13 +623,37 @@ BEGIN
     -- Obtener el ID del nuevo operador
     SET p_operador_id = LAST_INSERT_ID();
 
-    -- Actualizar estado del candidato
+    -- 2. Insertar en contratos_usuario
+    INSERT INTO contratos_usuario (
+        user_id,
+        categoria_profesional_id,
+        horas_semana,
+        tcontrato,
+        dias,
+        horario,
+        fecha_desde,
+        created_at
+    ) VALUES (
+        p_operador_id,
+        p_categoria_profesional_id,
+        p_horas_semana,
+        p_tcontrato,
+        p_dias,
+        p_horario,
+        CURDATE(),
+        NOW()
+    );
+
+    -- Obtener el ID del contrato
+    SET p_contrato_id = LAST_INSERT_ID();
+
+    -- 3. Actualizar estado del candidato
     UPDATE candidatos
     SET estado_global = 'CONTRATADO',
         updated_at = NOW()
     WHERE id = p_candidato_id;
 
-    -- Registrar en historial
+    -- 4. Registrar en historial
     INSERT INTO historial_candidato (
         candidato_id,
         tipo_accion,
@@ -629,11 +662,11 @@ BEGIN
     ) VALUES (
         p_candidato_id,
         'CONTRATADO',
-        CONCAT('Creado como operador ID: ', p_operador_id),
+        CONCAT('Operador ID: ', p_operador_id, ' | Contrato ID: ', p_contrato_id),
         'CONTRATADO'
     );
 
-    -- Insertar en tabla contratados
+    -- 5. Insertar en tabla contratados (relacion)
     INSERT INTO contratados (
         candidato_id,
         segunda_entrevista_id,
@@ -643,7 +676,16 @@ BEGIN
         p_candidato_id,
         (SELECT MAX(id) FROM segundas_entrevistas WHERE candidato_id = p_candidato_id),
         (SELECT perfil_codigo FROM candidatos WHERE id = p_candidato_id),
-        CONCAT('Operador ERP ID: ', p_operador_id)
+        CONCAT('Operador ID: ', p_operador_id, ' | Contrato ID: ', p_contrato_id)
+    );
+
+    -- 6. Insertar relacion candidato-operador
+    INSERT INTO candidato_operador (
+        candidato_id,
+        operador_id
+    ) VALUES (
+        p_candidato_id,
+        p_operador_id
     );
 
 END //
