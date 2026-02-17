@@ -10,15 +10,16 @@
 | 4 | Telefono | Telefono de contacto | VARCHAR |
 | 5 | Email | Correo electronico | VARCHAR |
 | 6 | Localidad | Ciudad/Residencia | VARCHAR |
-| 7 | B | Carnet B (S/N) | TINYINT |
-| 8 | C | Carnet C (S/N) | TINYINT |
-| 9 | CAP | Certificado CAP (S/N) | TINYINT |
-| 10 | Carr | Carnet Carretillero (S/N) | TINYINT |
-| 11 | Puesto | Perfil asignado segun keywords | VARCHAR |
-| 12 | Exp | Anos de experiencia total | DECIMAL |
-| 13 | Estudios | Estudios reglados | VARCHAR |
-| 14 | CV | Enlace al curriculum detallado | TEXT |
-| 15 | Entrevista | Desplegable Si/No | ENUM |
+| 7 | Veh | Vehiculo propio (S/N) | TINYINT |
+| 8 | B | Carnet B (S/N) | TINYINT |
+| 9 | C | Carnet C (S/N) | TINYINT |
+| 10 | CAP | Certificado CAP (S/N) | TINYINT |
+| 11 | Carr | Carnet Carretillero (S/N) | TINYINT |
+| 12 | Puesto | Perfil asignado segun keywords | VARCHAR |
+| 13 | Exp | Anos de experiencia total | DECIMAL |
+| 14 | Estudios | Estudios reglados | VARCHAR |
+| 15 | CV | Enlace al curriculum detallado | TEXT |
+| 16 | Entrevista | Desplegable Si/No | ENUM |
 
 ---
 
@@ -26,11 +27,11 @@
 
 ```
 PESCADERIA (7)
-ID |Nombre   |Apellido|Telefono   |Email               |Localid|B|C|CAP|Car|Puesto  |Exp |Est|CV |Entr
----|---------|--------|-----------|--------------------| ------|–|–|---|---|--------|----| –-|---|----
- 65|Adela    |Ruano   |675 942 449|adelaruano1269@gmai |Cordoba|S|N|N  |N  |PESCADE |20.3|-  |[+]|[ v]
-180|Mari     |Carmen  |654 728 707|mc_gar@yahoo.es     |Lucena |S|N|N  |N  |PESCADE |13.0|-  |[+]|[ v]
-103|Angela   |Navarro |622-52-80-9|angelanavex@gmail.c |Cordoba|N|N|N  |N  |PESCADE | 5.3|-  |[+]|[ v]
+ID |Nombre   |Apellido|Telefono   |Email               |Localid|Veh|B|C|CAP|Car|Puesto  |Exp |Est|CV |Entr
+---|---------|--------|-----------|--------------------| ------|---|–|–|---|---|--------|----| –-|---|----
+ 65|Adela    |Ruano   |675 942 449|adelaruano1269@gmai |Cordoba|S  |S|N|N  |N  |PESCADE |20.3|-  |[+]|[ v]
+180|Mari     |Carmen  |654 728 707|mc_gar@yahoo.es     |Lucena |N  |S|N|N  |N  |PESCADE |13.0|-  |[+]|[ v]
+103|Angela   |Navarro |622-52-80-9|angelanavex@gmail.c |Cordoba|S  |N|N|N  |N  |PESCADE | 5.3|-  |[+]|[ v]
 ```
 
 ---
@@ -58,11 +59,11 @@ Los candidatos sin perfil asignado tienen los **mismos 15 campos**, pero:
 **Ejemplo Visual**:
 ```
 PENDIENTES ASIGNAR (112)
-ID |Nombre   |Apellido|Telefono   |Email               |Localid|B|C|CAP|Car|Puesto|Exp |Est|CV |Asignar
----|---------|--------|-----------|--------------------| ------|–|–|---|---|------|----|-–-|---|--------
- 12|Pedro    |Lopez   |666 123 456|pedrolopez@gmail.com|Montill|S|N|N  |N  |  -   | 3.2|ESO|[+]|[    v ]
- 45|Carmen   |Jimenez |654 987 321|cjimenez@hotmail.es |Cordoba|S|N|N  |N  |  -   | 5.0|FP |[+]|[    v ]
- 78|Francisco|Moreno  |622 555 888|fmoreno@yahoo.es    |Lucena |S|S|S  |N  |  -   | 8.1|BAC|[+]|[    v ]
+ID |Nombre   |Apellido|Telefono   |Email               |Localid|Veh|B|C|CAP|Car|Puesto|Exp |Est|CV |Asignar
+---|---------|--------|-----------|--------------------| ------|---|–|–|---|---|------|----|-–-|---|--------
+ 12|Pedro    |Lopez   |666 123 456|pedrolopez@gmail.com|Montill|S  |S|N|N  |N  |  -   | 3.2|ESO|[+]|[    v ]
+ 45|Carmen   |Jimenez |654 987 321|cjimenez@hotmail.es |Cordoba|N  |S|N|N  |N  |  -   | 5.0|FP |[+]|[    v ]
+ 78|Francisco|Moreno  |622 555 888|fmoreno@yahoo.es    |Lucena |S  |S|S|S  |N  |  -   | 8.1|BAC|[+]|[    v ]
 ```
 
 **Desplegable Asignar**: PESCADERIA, LOGISTICA, PRODUCCION, ADMINISTRATIVO, GESTION, DESCARTADO
@@ -260,7 +261,114 @@ Cuando un candidato pasa a Entrevista (Entrevista = Si), se genera automaticamen
 | resultado | PASA / DESCARTADO | ENUM |
 | notas | Observaciones de la entrevista | TEXT |
 
-### 8.4 Roles en Segunda Fase
+### 8.4 Tabla: LLAMADAS
+
+La tabla Llamadas tiene los **mismos 16 campos que Perfiles**, pero el campo 16 (Entrevista) tiene opciones diferentes.
+
+**Campos 1-15**: Iguales que Perfiles (ID, Nombre, Apellido, Telefono, Email, Localidad, Veh, B, C, CAP, Carr, Puesto, Exp, Estudios, CV)
+
+**Campo 16**: Entrevista (Si / No / Duda)
+
+**Ejemplo Visual**:
+```
+LLAMADAS
+ID |Nombre   |Apellido|Telefono   |Email               |Localid|Veh|B|C|CAP|Car|Puesto  |Exp |Est|CV |Entrevista
+---|---------|--------|-----------|--------------------| ------|---|–|–|---|---|--------|----| –-|---|----------
+ 65|Adela    |Ruano   |675 942 449|adelaruano1269@gmai |Cordoba|S  |S|N|N  |N  |PESCADE |20.3|-  |[+]|[    v   ]
+103|Angela   |Navarro |622-52-80-9|angelanavex@gmail.c |Cordoba|S  |N|N|N  |N  |PESCADE | 5.3|-  |[+]|[    v   ]
+ 78|Francisco|Moreno  |622 555 888|fmoreno@yahoo.es    |Lucena |S  |S|S|S  |N  |LOGIST  | 8.1|BAC|[+]|[    v   ]
+```
+
+### 8.5 Campo Entrevista en Llamadas (Logica)
+
+| Opcion | Accion |
+|--------|--------|
+| **Si** | Abre campos Dia/Hora → pasa a ENTREVISTAS |
+| **No** | Abre campo Motivo → pasa a DESCARTADOS |
+| **Duda** | Abre campo Comentario → vuelve a PERFILES |
+
+#### Si Entrevista = Si
+```
++------------------+     +------------------+
+| Entrevista: [Si] | --> | Dia:  [19/02/26] |
++------------------+     | Hora: [10:00   ] |
+                         +------------------+
+                                 |
+                                 v
+                         Guarda como DATETIME
+                         2026-02-19 10:00:00
+                                 |
+                                 v
+                         Pasa a ENTREVISTAS
+```
+
+#### Si Entrevista = No
+```
++------------------+     +----------------------+
+| Entrevista: [No] | --> | Motivo: [    v     ] |
++------------------+     +----------------------+
+                                 |
+                         - No interesado
+                         - No contesta (3 intentos)
+                         - Numero erroneo
+                         - Otros
+                                 |
+                                 v
+                         DESCARTADOS
+                         (registra usuario + motivo + fecha)
+```
+
+#### Si Entrevista = Duda
+```
++--------------------+     +-------------------------+
+| Entrevista: [Duda] | --> | Comentario/Duda:        |
++--------------------+     | [____________________]  |
+                           +-------------------------+
+                                      |
+                                      v
+                           Vuelve a PERFILES con marca DUDA
+```
+
+### 8.6 Flujo de DUDAS
+
+```
+LLAMADOR                              SELECTOR (Perfiles)
++--------------------+
+| Entrevista: [Duda] |
+| Comentario: [____] |
++--------------------+
+         |
+         v
++--------------------+                +----------------------+
+| Vuelve a PERFILES  | -------------> | Ve candidato + DUDA  |
+| con marca DUDA     |                | Comentario llamador  |
++--------------------+                +----------------------+
+                                               |
+                                      +--------+--------+
+                                      |                 |
+                                     SI                NO
+                                      |                 |
+                                      v                 v
+                              +----------------+  +------------------+
+                              | Abre campo     |  | DESCARTADO       |
+                              | comentario     |  | (automatico)     |
+                              | para responder |  +------------------+
+                              +----------------+
+                                      |
+                                      v
++--------------------+        +----------------+
+| Vuelve a LLAMADAS  | <----- | Respuesta del  |
+| con respuesta      |        | selector       |
++--------------------+        +----------------+
+         |
+         v
++--------------------+
+| Llamador vuelve a  |
+| llamar con la info |
++--------------------+
+```
+
+### 8.7 Roles en Segunda Fase
 
 | Rol | Tabla | Condicion | Funcion |
 |-----|-------|-----------|---------|
