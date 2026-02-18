@@ -2395,6 +2395,218 @@ Si se modifican estas condiciones en el contrato activo:
 
 ---
 
+---
+
+## 21. MODIFICACION DE CONDICIONES DEL CONTRATO
+
+### 21.1 Condiciones que generan nuevo contrato/anexo
+
+Si un trabajador sufre una modificacion de alguna de estas condiciones, se genera **una nueva linea en los contratos del trabajador**:
+
+| Condicion | Genera nuevo contrato |
+|-----------|----------------------|
+| Cambio de categoria | SI |
+| Cambio de jornada (horas) | SI |
+
+**Nota**: Basta con que se modifique UNA de estas condiciones para generar el nuevo contrato.
+
+### 21.2 Flujo Modificacion de Condiciones
+
+```
+TRABAJADOR CON CONTRATO ACTIVO
+(3 meses, indefinido, etc.)
+         |
+         v
++---------------------------+
+| Se modifica condicion:    |
+| - Cambio categoria        |
+| - Cambio jornada          |
++---------------------------+
+         |
+         v
++---------------------------+
+| Se genera NUEVA LINEA     |
+| en contratos del trabajador|
+| (Anexo/Novacion)          |
++---------------------------+
+         |
+         v
++---------------------------+
+| HERMI sube el documento   |
+| del nuevo contrato/anexo  |
++---------------------------+
+         |
+         v
++---------------------------+
+| ALERTA: Director RRHH     |
+| "Nuevo anexo pendiente    |
+|  de firma: Manuel Manuel" |
++---------------------------+
+         |
+         v
++---------------------------+
+| Director RRHH FIRMA       |
+| (primero)                 |
++---------------------------+
+         |
+         v
++---------------------------+
+| Se DESBLOQUEA para        |
+| el trabajador             |
++---------------------------+
+         |
+         v
++---------------------------+
+| ALERTA: Trabajador        |
+| "Tienes un anexo/contrato |
+|  pendiente de firmar"     |
++---------------------------+
+         |
+         v
++---------------------------+
+| Trabajador FIRMA          |
+| (segundo)                 |
++---------------------------+
+         |
+         v
++---------------------------+
+| ANEXO COMPLETADO          |
+| Nueva linea activa        |
+| Anterior linea cerrada    |
++---------------------------+
+```
+
+### 21.3 Historial de Contratos del Trabajador
+
+Cada modificacion genera una nueva linea, manteniendo el historial completo:
+
+```
++============================================================================+
+|  CONTRATOS - Manuel Manuel (ID: 248)                                       |
++============================================================================+
+|                                                                             |
+|  # | Tipo        | Categoria | Horas | Desde      | Hasta      | Estado    |
+|  --|-------------|-----------|-------|------------|------------|-----------|
+|  1 | Temporal    | T0        | 40    | 01/12/2025 | 28/02/2026 | CERRADO   |
+|  2 | Indefinido  | T1        | 40    | 01/03/2026 | -          | CERRADO   |
+|  3 | Indefinido  | T1        | 35    | 15/04/2026 | -          | ACTIVO    |
+|                                                                             |
+|  Cambios realizados:                                                        |
+|  - 01/03/2026: Paso de temporal a indefinido, cambio categoria T0 → T1     |
+|  - 15/04/2026: Reduccion de jornada 40h → 35h                              |
+|                                                                             |
++============================================================================+
+```
+
+### 21.4 Ejemplo Practico
+
+**Situacion inicial**:
+- Trabajador: Manuel Manuel
+- Contrato: Temporal 3 meses
+- Categoria: T0
+- Jornada: 40 horas
+
+**Modificacion**: Cambio de jornada a 35 horas
+
+```
+1. Director RRHH modifica jornada en el sistema
+   40h → 35h
+         |
+         v
+2. Sistema genera nueva linea de contrato
+   Contrato #2: Categoria T0, 35h
+         |
+         v
+3. ALERTA a Hermi
+   "Modificacion de condiciones - Manuel Manuel
+    Cambio de jornada: 40h → 35h
+    Subir documento del anexo"
+         |
+         v
+4. Hermi sube documento anexo
+         |
+         v
+5. ALERTA a Director RRHH
+   "Anexo pendiente de firma - Manuel Manuel"
+         |
+         v
+6. Director RRHH firma
+         |
+         v
+7. ALERTA a Trabajador
+   "Tienes un anexo pendiente de firmar"
+         |
+         v
+8. Trabajador firma
+         |
+         v
+9. COMPLETADO
+   - Contrato #1: CERRADO (40h)
+   - Contrato #2: ACTIVO (35h)
+```
+
+### 21.5 Tipos de Documentos por Modificacion
+
+| Modificacion | Documento |
+|--------------|-----------|
+| Cambio categoria | Anexo de novacion |
+| Cambio jornada | Anexo de modificacion de jornada |
+| Ambos | Anexo de novacion con modificacion de jornada |
+
+### 21.6 Alertas de Modificacion
+
+#### ALERTA a Hermi (subir documento)
+```
+Para: Hermi (Asesor SS)
+Asunto: Modificacion condiciones - Manuel Manuel
+
+Mensaje:
+"Se ha modificado las condiciones del contrato de Manuel Manuel.
+
+CAMBIOS:
+- Jornada: 40h → 35h
+
+ACCIONES:
+[ ] Preparar anexo de modificacion
+[ ] Subir documento al sistema
+
+[Acceder al sistema]"
+```
+
+#### ALERTA a Director RRHH (firmar)
+```
+Para: Director RRHH
+Asunto: Anexo pendiente de firma - Manuel Manuel
+
+Mensaje:
+"Hermi ha subido el anexo de modificacion de Manuel Manuel.
+Tienes pendiente firmar el documento.
+
+CAMBIOS:
+- Jornada: 40h → 35h
+
+[Firmar anexo]"
+```
+
+#### ALERTA a Trabajador (firmar)
+```
+Para: Manuel Manuel
+Asunto: Tienes un anexo pendiente de firmar
+
+Mensaje:
+"Hola Manuel,
+
+Se han modificado las condiciones de tu contrato.
+Accede al portal para revisar y firmar el anexo.
+
+CAMBIOS:
+- Jornada: 40h → 35h
+
+[Acceder al portal]"
+```
+
+---
+
 *Documento generado: 2026-02-17*
 *Ultima actualizacion: 2026-02-18*
 *Ultima actualizacion: 2026-02-18*
