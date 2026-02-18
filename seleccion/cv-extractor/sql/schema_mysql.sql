@@ -734,5 +734,668 @@ CREATE TABLE IF NOT EXISTS candidato_operador (
 
 
 -- =============================================================================
+-- CODIGO SQL - POST-CONTRATACION
+-- Ordenado segun secuencia del flujo documentado
+-- Fecha: 2026-02-18
+-- =============================================================================
+
+
+-- =============================================================================
+-- SECUENCIA 1: PORTAL CANDIDATO (datos minimos)
+-- Cuando el candidato recibe "Entrega Codigos" en la primera entrevista
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS portal_candidato (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    candidato_id BIGINT UNSIGNED NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255),
+    token_registro VARCHAR(100),
+
+    -- Datos minimos (4 campos)
+    nombre VARCHAR(100) NOT NULL,
+    primer_apellido VARCHAR(100) NOT NULL,
+    telefono VARCHAR(20) NOT NULL,
+    correo_electronico VARCHAR(255) NOT NULL,
+
+    -- Gaming codigos
+    codigos_practicados INT DEFAULT 0,
+    aciertos_totales INT DEFAULT 0,
+    porcentaje_aciertos DECIMAL(5,2) DEFAULT 0,
+
+    -- Estado
+    registrado TINYINT(1) DEFAULT 0,
+    fecha_registro DATETIME,
+    ultimo_acceso DATETIME,
+    activo TINYINT(1) DEFAULT 1,
+
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_candidato (candidato_id),
+    UNIQUE KEY uk_email (email),
+    FOREIGN KEY (candidato_id) REFERENCES candidatos(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- SECUENCIA 2: CONTRATADO → PORTAL EMPLEADO
+-- Cuando el candidato pasa la ultima entrevista y se marca CONTRATADO
+-- Se crea automaticamente con ID siguiente al ultimo
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS portal_empleado (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    operador_id INT NOT NULL,
+    candidato_id BIGINT UNSIGNED,
+
+    -- Datos transferidos automaticamente del portal candidato (4 campos)
+    nombre VARCHAR(100),
+    primer_apellido VARCHAR(100),
+    telefono VARCHAR(20),
+    correo_electronico VARCHAR(255),
+
+    -- Datos obligatorios que completa el trabajador (9 campos)
+    dni_nie VARCHAR(20),
+    cuenta_bancaria VARCHAR(34) COMMENT 'IBAN',
+    naf VARCHAR(20) COMMENT 'Numero Afiliacion SS',
+    direccion VARCHAR(255),
+    codigo_postal VARCHAR(10),
+    municipio VARCHAR(100),
+    fecha_nacimiento DATE,
+
+    -- Carnets conduccion (opcionales, obligatorios si usa vehiculo empresa)
+    carnet_c TINYINT(1) DEFAULT 0,
+    carnet_c_caducidad DATE,
+    carnet_c_documento VARCHAR(500),
+
+    cap TINYINT(1) DEFAULT 0,
+    cap_caducidad DATE,
+    cap_documento VARCHAR(500),
+
+    carnet_carretillero TINYINT(1) DEFAULT 0,
+    carnet_carretillero_caducidad DATE,
+    carnet_carretillero_documento VARCHAR(500),
+
+    certificado_puntos TINYINT(1) DEFAULT 0,
+    certificado_puntos_fecha DATE,
+    certificado_puntos_documento VARCHAR(500),
+
+    tacografo TINYINT(1) DEFAULT 0,
+    tacografo_caducidad DATE,
+    tacografo_documento VARCHAR(500),
+
+    -- Documentos de salud
+    carnet_manipulador TINYINT(1) DEFAULT 0,
+    carnet_manipulador_fecha_obtencion DATE,
+    carnet_manipulador_caducidad DATE COMMENT 'fecha_obtencion + 4 años',
+    carnet_manipulador_documento VARCHAR(500),
+
+    reconocimiento_medico TINYINT(1) DEFAULT 0,
+    reconocimiento_medico_fecha DATE,
+    reconocimiento_medico_caducidad DATE COMMENT 'fecha + 1 año',
+    reconocimiento_medico_documento VARCHAR(500),
+
+    -- Estado de completitud
+    datos_completos TINYINT(1) DEFAULT 0,
+    fecha_datos_completos DATETIME,
+
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_operador (operador_id),
+    INDEX idx_candidato (candidato_id),
+    FOREIGN KEY (candidato_id) REFERENCES candidatos(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- SECUENCIA 3: ALERTAS CONTRATACION
+-- Sistema de alertas para el flujo de contratacion
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS alertas_contratacion (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    operador_id INT NOT NULL,
+    candidato_id BIGINT UNSIGNED,
+
+    tipo_alerta ENUM(
+        'ALERTA_1_DIRECTOR_NUEVO_CONTRATADO',
+        'ALERTA_2_HERMI_PENDIENTE_ALTA',
+        'ALERTA_3_HERMI_DATOS_COMPLETOS',
+        'ALERTA_4_DIRECTOR_FIRMA_CONTRATO',
+        'ALERTA_5_TRABAJADOR_FIRMA_CONTRATO',
+        'ALERTA_6_CONFIRMACION_FIRMA'
+    ) NOT NULL,
+
+    destinatario_rol ENUM('DIRECTOR_RRHH', 'HERMI_SS', 'TRABAJADOR') NOT NULL,
+    destinatario_email VARCHAR(255),
+
+    asunto VARCHAR(255),
+    mensaje TEXT,
+
+    estado ENUM('PENDIENTE', 'ENVIADA', 'LEIDA') DEFAULT 'PENDIENTE',
+    fecha_envio DATETIME,
+    fecha_lectura DATETIME,
+
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_operador (operador_id),
+    INDEX idx_tipo (tipo_alerta),
+    INDEX idx_estado (estado)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- SECUENCIA 4: FIRMA DE CONTRATOS
+-- Flujo de firma con estados
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS firma_contratos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    operador_id INT NOT NULL,
+    candidato_id BIGINT UNSIGNED,
+
+    -- Estados del contrato (segun flujo)
+    estado ENUM(
+        'PENDIENTE_ALTA',
+        'PENDIENTE_FIRMA_EMPRESA',
+        'FIRMADO_EMPRESA',
+        'FIRMADO_AMBOS'
+    ) DEFAULT 'PENDIENTE_ALTA',
+
+    -- Datos que completa Director RRHH
+    categoria_profesional_id INT,
+    horas_semana INT,
+    fecha_inicio DATE,
+    fecha_fin DATE COMMENT 'NULL si indefinido',
+
+    -- Datos que completa Hermi
+    tipo_contrato VARCHAR(100),
+    codigo_contrato VARCHAR(50),
+
+    -- Alta SS
+    alta_ss_realizada TINYINT(1) DEFAULT 0,
+    fecha_alta_ss DATE,
+
+    -- Firmas
+    fecha_firma_empresa DATETIME,
+    firmado_por_empresa VARCHAR(100),
+    fecha_firma_trabajador DATETIME,
+
+    -- Documento
+    contrato_url VARCHAR(500),
+    contrato_firmado_url VARCHAR(500),
+
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_operador (operador_id),
+    INDEX idx_estado (estado)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- SECUENCIA 5: PROCEDIMIENTO - Al marcar CONTRATADO
+-- Crea alertas 1 y 2 automaticamente
+-- =============================================================================
+DELIMITER //
+
+CREATE PROCEDURE IF NOT EXISTS sp_marcar_contratado(
+    IN p_candidato_id BIGINT UNSIGNED,
+    IN p_operador_id INT
+)
+BEGIN
+    DECLARE v_nombre VARCHAR(100);
+    DECLARE v_perfil VARCHAR(50);
+
+    SELECT CONCAT(nombre, ' ', apellido1), perfil_codigo
+    INTO v_nombre, v_perfil
+    FROM candidatos WHERE id = p_candidato_id;
+
+    -- Crear portal empleado con datos minimos transferidos
+    INSERT INTO portal_empleado (operador_id, candidato_id, nombre, primer_apellido, telefono, correo_electronico)
+    SELECT p_operador_id, p_candidato_id, nombre, primer_apellido, telefono, correo_electronico
+    FROM portal_candidato WHERE candidato_id = p_candidato_id;
+
+    -- Crear registro firma contrato
+    INSERT INTO firma_contratos (operador_id, candidato_id, estado)
+    VALUES (p_operador_id, p_candidato_id, 'PENDIENTE_ALTA');
+
+    -- ALERTA 1: Director RRHH
+    INSERT INTO alertas_contratacion (
+        operador_id, candidato_id, tipo_alerta, destinatario_rol, asunto, mensaje
+    ) VALUES (
+        p_operador_id, p_candidato_id,
+        'ALERTA_1_DIRECTOR_NUEVO_CONTRATADO', 'DIRECTOR_RRHH',
+        CONCAT('Nuevo contratado - ', v_nombre),
+        CONCAT('Se ha contratado a ', v_nombre, '.\nPerfil: ', v_perfil,
+               '\n\nPendiente completar datos del contrato:\n- Categoria\n- Horas\n- Comienzo contrato\n- Fin contrato')
+    );
+
+    -- ALERTA 2: Hermi (aviso previo)
+    INSERT INTO alertas_contratacion (
+        operador_id, candidato_id, tipo_alerta, destinatario_rol, asunto, mensaje
+    ) VALUES (
+        p_operador_id, p_candidato_id,
+        'ALERTA_2_HERMI_PENDIENTE_ALTA', 'HERMI_SS',
+        CONCAT('Pendiente alta SS - ', v_nombre),
+        CONCAT('Nuevo contratado pendiente de alta en Seguridad Social.\nNombre: ', v_nombre,
+               '\nPerfil: ', v_perfil, '\n\nPendiente recibir datos del contrato del Director RRHH.')
+    );
+
+END //
+
+DELIMITER ;
+
+
+-- =============================================================================
+-- SECUENCIA 6: PROCEDIMIENTO - Director RRHH completa datos contrato
+-- Categoria, Horas, Comienzo, Fin → Dispara ALERTA 3
+-- =============================================================================
+DELIMITER //
+
+CREATE PROCEDURE IF NOT EXISTS sp_director_completa_contrato(
+    IN p_operador_id INT,
+    IN p_categoria_id INT,
+    IN p_horas INT,
+    IN p_fecha_inicio DATE,
+    IN p_fecha_fin DATE
+)
+BEGIN
+    DECLARE v_nombre VARCHAR(100);
+    DECLARE v_dni VARCHAR(20);
+    DECLARE v_telefono VARCHAR(20);
+    DECLARE v_email VARCHAR(255);
+    DECLARE v_candidato_id BIGINT;
+
+    UPDATE firma_contratos
+    SET categoria_profesional_id = p_categoria_id,
+        horas_semana = p_horas,
+        fecha_inicio = p_fecha_inicio,
+        fecha_fin = p_fecha_fin
+    WHERE operador_id = p_operador_id;
+
+    SELECT fc.candidato_id, CONCAT(c.nombre, ' ', c.apellido1), c.dni, c.telefono, c.email
+    INTO v_candidato_id, v_nombre, v_dni, v_telefono, v_email
+    FROM firma_contratos fc
+    JOIN candidatos c ON fc.candidato_id = c.id
+    WHERE fc.operador_id = p_operador_id;
+
+    -- ALERTA 3: Hermi - Datos completos
+    INSERT INTO alertas_contratacion (
+        operador_id, candidato_id, tipo_alerta, destinatario_rol, asunto, mensaje
+    ) VALUES (
+        p_operador_id, v_candidato_id,
+        'ALERTA_3_HERMI_DATOS_COMPLETOS', 'HERMI_SS',
+        CONCAT('ALTA SS - ', v_nombre, ' - DATOS COMPLETOS'),
+        CONCAT('Ya puedes tramitar el alta en Seguridad Social.\n\n',
+               'DATOS DEL TRABAJADOR:\n- Nombre: ', v_nombre,
+               '\n- DNI: ', COALESCE(v_dni, 'Pendiente'),
+               '\n- Telefono: ', COALESCE(v_telefono, 'Pendiente'),
+               '\n- Email: ', COALESCE(v_email, 'Pendiente'),
+               '\n\nDATOS DEL CONTRATO:\n- Categoria: ', p_categoria_id,
+               '\n- Horas: ', p_horas, ' h/semana',
+               '\n- Comienzo: ', p_fecha_inicio,
+               '\n- Fin: ', COALESCE(p_fecha_fin, 'Indefinido'),
+               '\n\nPor favor, confirmar cuando este tramitada el alta.')
+    );
+
+END //
+
+DELIMITER ;
+
+
+-- =============================================================================
+-- SECUENCIA 7: PROCEDIMIENTO - Hermi completa alta SS
+-- Tipo contrato, Codigo contrato → Dispara ALERTA 4
+-- =============================================================================
+DELIMITER //
+
+CREATE PROCEDURE IF NOT EXISTS sp_hermi_completa_alta(
+    IN p_operador_id INT,
+    IN p_tipo_contrato VARCHAR(100),
+    IN p_codigo_contrato VARCHAR(50),
+    IN p_fecha_alta DATE
+)
+BEGIN
+    DECLARE v_nombre VARCHAR(100);
+    DECLARE v_candidato_id BIGINT;
+
+    UPDATE firma_contratos
+    SET tipo_contrato = p_tipo_contrato,
+        codigo_contrato = p_codigo_contrato,
+        alta_ss_realizada = 1,
+        fecha_alta_ss = p_fecha_alta,
+        estado = 'PENDIENTE_FIRMA_EMPRESA'
+    WHERE operador_id = p_operador_id;
+
+    SELECT fc.candidato_id, CONCAT(c.nombre, ' ', c.apellido1)
+    INTO v_candidato_id, v_nombre
+    FROM firma_contratos fc
+    JOIN candidatos c ON fc.candidato_id = c.id
+    WHERE fc.operador_id = p_operador_id;
+
+    -- ALERTA 4: Director RRHH - Firma pendiente
+    INSERT INTO alertas_contratacion (
+        operador_id, candidato_id, tipo_alerta, destinatario_rol, asunto, mensaje
+    ) VALUES (
+        p_operador_id, v_candidato_id,
+        'ALERTA_4_DIRECTOR_FIRMA_CONTRATO', 'DIRECTOR_RRHH',
+        CONCAT('Contrato pendiente de firma - ', v_nombre),
+        CONCAT('El trabajador ', v_nombre, ' ya esta dado de alta en SS.\n',
+               'Tienes pendiente firmar su contrato.\n\n[Firmar contrato]')
+    );
+
+END //
+
+DELIMITER ;
+
+
+-- =============================================================================
+-- SECUENCIA 8: PROCEDIMIENTO - Director RRHH firma contrato
+-- Se desbloquea para el trabajador → Dispara ALERTA 5
+-- =============================================================================
+DELIMITER //
+
+CREATE PROCEDURE IF NOT EXISTS sp_director_firma_contrato(
+    IN p_operador_id INT,
+    IN p_firmado_por VARCHAR(100)
+)
+BEGIN
+    DECLARE v_nombre VARCHAR(100);
+    DECLARE v_candidato_id BIGINT;
+    DECLARE v_email VARCHAR(255);
+
+    UPDATE firma_contratos
+    SET estado = 'FIRMADO_EMPRESA',
+        fecha_firma_empresa = NOW(),
+        firmado_por_empresa = p_firmado_por
+    WHERE operador_id = p_operador_id;
+
+    SELECT fc.candidato_id, CONCAT(c.nombre, ' ', c.apellido1), c.email
+    INTO v_candidato_id, v_nombre, v_email
+    FROM firma_contratos fc
+    JOIN candidatos c ON fc.candidato_id = c.id
+    WHERE fc.operador_id = p_operador_id;
+
+    -- ALERTA 5: Trabajador - Ya puede firmar
+    INSERT INTO alertas_contratacion (
+        operador_id, candidato_id, tipo_alerta, destinatario_rol,
+        destinatario_email, asunto, mensaje
+    ) VALUES (
+        p_operador_id, v_candidato_id,
+        'ALERTA_5_TRABAJADOR_FIRMA_CONTRATO', 'TRABAJADOR',
+        v_email,
+        'Tu contrato esta listo para firmar',
+        CONCAT('Hola ', v_nombre, ',\n\n',
+               'Tu contrato de trabajo esta listo para que lo firmes.\n',
+               'Accede al portal para revisar y firmar el contrato.\n\n[Acceder al portal]')
+    );
+
+END //
+
+DELIMITER ;
+
+
+-- =============================================================================
+-- SECUENCIA 9: PROCEDIMIENTO - Trabajador firma contrato
+-- Contrato completado → Dispara ALERTA 6
+-- =============================================================================
+DELIMITER //
+
+CREATE PROCEDURE IF NOT EXISTS sp_trabajador_firma_contrato(
+    IN p_operador_id INT
+)
+BEGIN
+    DECLARE v_nombre VARCHAR(100);
+    DECLARE v_candidato_id BIGINT;
+    DECLARE v_fecha_empresa DATETIME;
+
+    SELECT fecha_firma_empresa INTO v_fecha_empresa
+    FROM firma_contratos WHERE operador_id = p_operador_id;
+
+    UPDATE firma_contratos
+    SET estado = 'FIRMADO_AMBOS',
+        fecha_firma_trabajador = NOW()
+    WHERE operador_id = p_operador_id;
+
+    SELECT fc.candidato_id, CONCAT(c.nombre, ' ', c.apellido1)
+    INTO v_candidato_id, v_nombre
+    FROM firma_contratos fc
+    JOIN candidatos c ON fc.candidato_id = c.id
+    WHERE fc.operador_id = p_operador_id;
+
+    -- ALERTA 6: Confirmacion a Director RRHH
+    INSERT INTO alertas_contratacion (
+        operador_id, candidato_id, tipo_alerta, destinatario_rol, asunto, mensaje
+    ) VALUES (
+        p_operador_id, v_candidato_id,
+        'ALERTA_6_CONFIRMACION_FIRMA', 'DIRECTOR_RRHH',
+        CONCAT('Contrato firmado - ', v_nombre),
+        CONCAT('El contrato de ', v_nombre, ' ha sido firmado por ambas partes.\n\n',
+               'Fecha firma empresa: ', v_fecha_empresa, '\n',
+               'Fecha firma trabajador: ', NOW(), '\nEstado: COMPLETADO')
+    );
+
+    -- ALERTA 6: Confirmacion a Hermi
+    INSERT INTO alertas_contratacion (
+        operador_id, candidato_id, tipo_alerta, destinatario_rol, asunto, mensaje
+    ) VALUES (
+        p_operador_id, v_candidato_id,
+        'ALERTA_6_CONFIRMACION_FIRMA', 'HERMI_SS',
+        CONCAT('Contrato firmado - ', v_nombre),
+        CONCAT('El contrato de ', v_nombre, ' ha sido firmado por ambas partes.\n\n',
+               'Fecha firma empresa: ', v_fecha_empresa, '\n',
+               'Fecha firma trabajador: ', NOW(), '\nEstado: COMPLETADO')
+    );
+
+END //
+
+DELIMITER ;
+
+
+-- =============================================================================
+-- SECUENCIA 10: FIRMAS INDEPENDIENTES DEL TRABAJADOR
+-- Documentos que firma sin esperar al contrato
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS firmas_documentos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    operador_id INT NOT NULL,
+
+    tipo_documento ENUM(
+        'PROTECCION_DATOS',
+        'USOS_IMAGENES',
+        'FORMACION',
+        'EPI',
+        'INFORMACION',
+        'POLITICA',
+        'CONFIDENCIALIDAD',
+        'BANCO',
+        'MATERIAL',
+        'PROTOCOLO_ACOSO'
+    ) NOT NULL,
+
+    estado ENUM('PENDIENTE', 'FIRMADO') DEFAULT 'PENDIENTE',
+    fecha_firma DATETIME,
+    documento_url VARCHAR(500),
+
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_operador (operador_id),
+    INDEX idx_estado (estado),
+    UNIQUE KEY uk_operador_documento (operador_id, tipo_documento)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- SECUENCIA 11: RECONOCIMIENTOS MEDICOS (Dashboard)
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS reconocimientos_medicos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    operador_id INT NOT NULL,
+
+    estado ENUM('PENDIENTE', 'PROGRAMADO', 'REALIZADO', 'DESCARGADO') DEFAULT 'PENDIENTE',
+
+    fecha_programado DATE,
+    fecha_realizado DATE,
+    fecha_caducidad DATE COMMENT 'fecha_realizado + 1 año',
+
+    -- Documento descargado automaticamente por script
+    documento_url VARCHAR(500),
+    fecha_descarga DATETIME,
+    descargado_automatico TINYINT(1) DEFAULT 0,
+
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_operador (operador_id),
+    INDEX idx_estado (estado),
+    INDEX idx_caducidad (fecha_caducidad)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- SECUENCIA 12: CONFIGURACION DIAS AVISO CADUCIDAD
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS config_dias_aviso (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tipo_documento VARCHAR(50) NOT NULL,
+    dias_aviso INT NOT NULL,
+    descripcion VARCHAR(200),
+
+    UNIQUE KEY uk_documento (tipo_documento)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO config_dias_aviso (tipo_documento, dias_aviso, descripcion) VALUES
+('CARNET_C', 30, 'Carnet de conducir tipo C'),
+('CAP', 180, 'Certificado de Aptitud Profesional - 6 meses aviso'),
+('CARNET_CARRETILLERO', 30, 'Carnet carretillero - obligatorio LOGISTICA'),
+('CERTIFICADO_PUNTOS', 30, 'Certificado de puntos DGT'),
+('TACOGRAFO', 28, 'Tarjeta de tacografo'),
+('CARNET_MANIPULADOR', 60, 'Carnet manipulador alimentos - validez 4 años'),
+('RECONOCIMIENTO_MEDICO', 30, 'Reconocimiento medico - validez 1 año')
+ON DUPLICATE KEY UPDATE dias_aviso = VALUES(dias_aviso);
+
+
+-- =============================================================================
+-- SECUENCIA 13: ALERTAS CADUCIDAD DOCUMENTOS
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS alertas_caducidad (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    operador_id INT NOT NULL,
+
+    tipo_documento VARCHAR(50) NOT NULL,
+    fecha_caducidad DATE NOT NULL,
+    dias_restantes INT,
+
+    estado ENUM('PENDIENTE', 'ENVIADA', 'RENOVADO', 'CADUCADO') DEFAULT 'PENDIENTE',
+    fecha_alerta DATETIME,
+
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_operador (operador_id),
+    INDEX idx_documento (tipo_documento),
+    INDEX idx_caducidad (fecha_caducidad)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- SECUENCIA 14: VISTAS DASHBOARD
+-- =============================================================================
+
+-- Vista: Reconocimientos medicos pendientes/caducados
+CREATE OR REPLACE VIEW v_reconocimientos_medicos AS
+SELECT
+    o.id AS operador_id,
+    CONCAT(o.Nombre, ' ', o.Apellido1) AS trabajador,
+    rm.estado,
+    rm.fecha_realizado AS ultimo_reconocimiento,
+    rm.fecha_caducidad,
+    DATEDIFF(rm.fecha_caducidad, CURDATE()) AS dias_restantes,
+    CASE
+        WHEN rm.estado = 'PENDIENTE' OR rm.id IS NULL THEN 'PENDIENTE'
+        WHEN rm.fecha_caducidad < CURDATE() THEN 'CADUCADO'
+        WHEN DATEDIFF(rm.fecha_caducidad, CURDATE()) <= 30 THEN 'PROXIMO_CADUCAR'
+        ELSE 'OK'
+    END AS estado_alerta
+FROM operadores o
+LEFT JOIN reconocimientos_medicos rm ON o.id = rm.operador_id
+WHERE o.activo = 1 AND o.borrado = 0;
+
+
+-- Vista: Documentos proximos a caducar
+CREATE OR REPLACE VIEW v_documentos_proximos_caducar AS
+SELECT
+    pe.operador_id,
+    CONCAT(o.Nombre, ' ', o.Apellido1) AS trabajador,
+    'CARNET_C' AS tipo_documento,
+    pe.carnet_c_caducidad AS fecha_caducidad,
+    DATEDIFF(pe.carnet_c_caducidad, CURDATE()) AS dias_restantes
+FROM portal_empleado pe
+JOIN operadores o ON pe.operador_id = o.id
+WHERE pe.carnet_c = 1 AND DATEDIFF(pe.carnet_c_caducidad, CURDATE()) <= 30
+
+UNION ALL
+
+SELECT pe.operador_id, CONCAT(o.Nombre, ' ', o.Apellido1), 'CAP',
+    pe.cap_caducidad, DATEDIFF(pe.cap_caducidad, CURDATE())
+FROM portal_empleado pe JOIN operadores o ON pe.operador_id = o.id
+WHERE pe.cap = 1 AND DATEDIFF(pe.cap_caducidad, CURDATE()) <= 180
+
+UNION ALL
+
+SELECT pe.operador_id, CONCAT(o.Nombre, ' ', o.Apellido1), 'CARNET_CARRETILLERO',
+    pe.carnet_carretillero_caducidad, DATEDIFF(pe.carnet_carretillero_caducidad, CURDATE())
+FROM portal_empleado pe JOIN operadores o ON pe.operador_id = o.id
+WHERE pe.carnet_carretillero = 1 AND DATEDIFF(pe.carnet_carretillero_caducidad, CURDATE()) <= 30
+
+UNION ALL
+
+SELECT pe.operador_id, CONCAT(o.Nombre, ' ', o.Apellido1), 'TACOGRAFO',
+    pe.tacografo_caducidad, DATEDIFF(pe.tacografo_caducidad, CURDATE())
+FROM portal_empleado pe JOIN operadores o ON pe.operador_id = o.id
+WHERE pe.tacografo = 1 AND DATEDIFF(pe.tacografo_caducidad, CURDATE()) <= 28
+
+UNION ALL
+
+SELECT pe.operador_id, CONCAT(o.Nombre, ' ', o.Apellido1), 'CARNET_MANIPULADOR',
+    pe.carnet_manipulador_caducidad, DATEDIFF(pe.carnet_manipulador_caducidad, CURDATE())
+FROM portal_empleado pe JOIN operadores o ON pe.operador_id = o.id
+WHERE pe.carnet_manipulador = 1 AND DATEDIFF(pe.carnet_manipulador_caducidad, CURDATE()) <= 60
+
+ORDER BY dias_restantes ASC;
+
+
+-- =============================================================================
+-- SECUENCIA 15: SCRIPT DESCARGA CERTIFICADOS MEDICOS
+-- Procedimiento llamado por script externo (cron)
+-- =============================================================================
+DELIMITER //
+
+CREATE PROCEDURE IF NOT EXISTS sp_registrar_certificado_medico(
+    IN p_operador_id INT,
+    IN p_fecha_realizado DATE,
+    IN p_documento_url VARCHAR(500)
+)
+BEGIN
+    -- Actualizar reconocimiento medico
+    UPDATE reconocimientos_medicos
+    SET estado = 'DESCARGADO',
+        fecha_realizado = p_fecha_realizado,
+        fecha_caducidad = DATE_ADD(p_fecha_realizado, INTERVAL 1 YEAR),
+        documento_url = p_documento_url,
+        fecha_descarga = NOW(),
+        descargado_automatico = 1
+    WHERE operador_id = p_operador_id;
+
+    -- Actualizar portal empleado
+    UPDATE portal_empleado
+    SET reconocimiento_medico = 1,
+        reconocimiento_medico_fecha = p_fecha_realizado,
+        reconocimiento_medico_caducidad = DATE_ADD(p_fecha_realizado, INTERVAL 1 YEAR),
+        reconocimiento_medico_documento = p_documento_url
+    WHERE operador_id = p_operador_id;
+
+END //
+
+DELIMITER ;
+
+
+-- =============================================================================
 -- FIN DEL SCHEMA
 -- =============================================================================
