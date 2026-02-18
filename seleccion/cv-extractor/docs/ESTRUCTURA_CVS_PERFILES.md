@@ -146,18 +146,113 @@ ALTER TABLE candidatos ADD COLUMN peticion_id INT;
 ALTER TABLE candidatos ADD INDEX idx_peticion (peticion_id);
 ```
 
-### 0.9 Ofertas de Empleo por Perfil
+### 0.9 Tabla SQL: perfiles (con ofertas de empleo)
 
-Cada perfil tiene una **plantilla de oferta de empleo** integrada en la tabla perfiles.
+La tabla **perfiles** contiene tanto la informacion del perfil como la plantilla de oferta de empleo.
 
-#### Campos de Oferta en tabla perfiles
+```sql
+CREATE TABLE IF NOT EXISTS perfiles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    codigo VARCHAR(50) UNIQUE NOT NULL COMMENT 'Codigo unico del perfil',
+    nombre VARCHAR(100) NOT NULL COMMENT 'Nombre visible del perfil',
+    descripcion TEXT COMMENT 'Descripcion del perfil',
+    keywords TEXT COMMENT 'Palabras clave separadas por coma para clasificacion',
+    activo TINYINT(1) DEFAULT 1 COMMENT '1=Activo, 0=Inactivo',
 
-| Campo | Descripcion |
-|-------|-------------|
-| oferta_titulo | Titulo de la oferta (ej: "Dependiente/a de Pescaderia") |
-| oferta_descripcion | Descripcion del puesto y tareas |
-| oferta_requisitos | Requisitos del candidato |
-| oferta_condiciones | Condiciones laborales ofrecidas |
+    -- Oferta de empleo (plantilla)
+    oferta_titulo VARCHAR(200) COMMENT 'Titulo de la oferta en InfoJobs',
+    oferta_descripcion TEXT COMMENT 'Descripcion del puesto y funciones',
+    oferta_requisitos TEXT COMMENT 'Requisitos del candidato',
+    oferta_condiciones TEXT COMMENT 'Condiciones laborales ofrecidas',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+#### Datos de Perfiles
+
+| Codigo | Nombre | Oferta Titulo |
+|--------|--------|---------------|
+| PESCADERIA | Pescaderia | Dependiente/a de Pescaderia |
+| LOGISTICA | Logistica | Operario/a de Logistica de Almacen |
+| PRODUCCION | Produccion | Operario/a de Produccion |
+| ADMINISTRATIVO | Administrativo | Administrativo/a |
+| GESTION | Gestion | Responsable de Area |
+| BECARIO | Becario | Becario/a en Practicas |
+
+#### Ofertas Completas
+
+**LOGISTICA - Operario/a de Logistica de Almacen**
+
+```
+DESCRIPCION:
+EMPRESA DEL SECTOR DE PESCADOS Y MARISCOS, UBICADA EN MERCACORDOBA,
+BUSCA INCORPORAR UNA PERSONA PARA JORNADA COMPLETA.
+
+FUNCIONES PRINCIPALES:
+- Descarga y recepcion de mercancia
+- Preparacion de pedidos
+- Almacenaje y organizacion de productos
+- Carga de mercancia para clientes
+
+OTRAS FUNCIONES:
+- Limpieza y orden del area de trabajo
+- Transporte interno de mercancia
+- Apoyo en corte y fileteado cuando sea necesario
+
+REQUISITOS IMPRESCINDIBLES:
+- Carnet y manejo de carretilla elevadora
+- Carnet de conducir
+- Disponibilidad para trabajar en horario de madrugada (a partir de las 2:00h)
+- Buena disposicion fisica para tareas de carga/descarga
+
+REQUISITOS VALORABLES:
+- Carnet C+CAP
+- Experiencia previa en almacen, logistica o puestos similares
+
+FORMACION/APRENDIZAJE:
+- No es necesario conocimiento previo de pescados y mariscos, pero si
+  capacidad y disposicion para aprender
+
+SE OFRECE:
+- Contrato a jornada completa
+- Horario de lunes a sabado (entrada a partir de las 2:00h)
+- Salario segun convenio y experiencia (17.000-23.000 EUR bruto/ano)
+- Posibilidad de promocion interna
+- Otros beneficios
+```
+
+**PESCADERIA - Dependiente/a de Pescaderia**
+
+```
+DESCRIPCION:
+Nos encontramos en la busqueda de Dependientes/as de Pescaderia que se
+encarguen de la venta, preparacion y manipulacion de una amplia variedad
+de productos del mar en una pescaderia de referencia.
+
+RESPONSABILIDADES Y FUNCIONES:
+- Atencion al cliente y asesoramiento sobre la seleccion y preparacion
+  de los productos del mar
+- Manipulacion y corte de pescado y mariscos
+- Ordenamiento, rotacion y almacenamiento de existencias
+- Recepcion y verificacion de la mercancia en el obrador
+- Colaboracion en la preparacion y presentacion de los productos
+- Mantenimiento de la limpieza y orden del area de trabajo
+
+REQUISITOS:
+- Experiencia previa en el sector de industria alimentaria, preferiblemente
+  en pescaderia o venta al detalle de alimentos
+- Dominio de las tecnicas de pescado, manipulacion de cuchillo, carniceria
+  y almacenamiento de existencias
+- Habilidades de atencion al cliente
+- Compromiso con la calidad, la higiene y la seguridad
+- Flexibilidad para adaptarse a los horarios
+
+SE OFRECE:
+- Oportunidad de formar parte de un equipo comprometido y en constante crecimiento
+- Desarrollo de habilidades profesionales
+- Posibilidad de contribuir al exito de nuestra pescaderia
+```
 
 #### Vista Dashboard - Ofertas por Perfil
 
@@ -166,18 +261,137 @@ Cada perfil tiene una **plantilla de oferta de empleo** integrada en la tabla pe
 |  OFERTAS DE EMPLEO POR PERFIL                                               |
 +============================================================================+
 |                                                                             |
-|  +----------------+--------------------------------+----------+-------------+  |
-|  | Perfil         | Titulo                         | Activo   | Acciones    |  |
-|  +----------------+--------------------------------+----------+-------------+  |
-|  | PESCADERIA     | Dependiente/a de Pescaderia    | [x]      | [Editar]    |  |
-|  | LOGISTICA      | Conductor/Repartidor           | [x]      | [Editar]    |  |
-|  | PRODUCCION     | Operario/a de Produccion       | [x]      | [Editar]    |  |
-|  | ADMINISTRATIVO | Administrativo/a               | [x]      | [Editar]    |  |
-|  | GESTION        | Responsable de Area            | [ ]      | [Editar]    |  |
-|  | BECARIO        | Becario/a en Practicas         | [x]      | [Editar]    |  |
-|  +----------------+--------------------------------+----------+-------------+  |
+|  +----------------+------------------------------------+--------+-----------+
+|  | Perfil         | Titulo                             | Activo | Acciones  |
+|  +----------------+------------------------------------+--------+-----------+
+|  | PESCADERIA     | Dependiente/a de Pescaderia        | [x]    | [Editar]  |
+|  | LOGISTICA      | Operario/a de Logistica de Almacen | [x]    | [Editar]  |
+|  | PRODUCCION     | Operario/a de Produccion           | [x]    | [Editar]  |
+|  | ADMINISTRATIVO | Administrativo/a                   | [x]    | [Editar]  |
+|  | GESTION        | Responsable de Area                | [ ]    | [Editar]  |
+|  | BECARIO        | Becario/a en Practicas             | [x]    | [Editar]  |
+|  +----------------+------------------------------------+--------+-----------+
 |                                                                             |
 +============================================================================+
+```
+
+### 0.10 Procedimiento: Crear Peticion de Trabajador
+
+```sql
+DELIMITER //
+
+CREATE PROCEDURE IF NOT EXISTS sp_crear_peticion_trabajador(
+    IN p_perfil_codigo VARCHAR(50),
+    IN p_solicitante_rol ENUM('GERENTE', 'DIRECTOR_RRHH'),
+    IN p_solicitante_nombre VARCHAR(100),
+    OUT p_peticion_id INT
+)
+BEGIN
+    -- Crear peticion
+    INSERT INTO peticiones_trabajador (
+        perfil_codigo,
+        solicitante_rol,
+        solicitante_nombre,
+        estado
+    ) VALUES (
+        p_perfil_codigo,
+        p_solicitante_rol,
+        p_solicitante_nombre,
+        'ABIERTA'
+    );
+
+    SET p_peticion_id = LAST_INSERT_ID();
+
+    -- Crear alerta automatica
+    INSERT INTO alertas_peticion (
+        peticion_id,
+        tipo_alerta,
+        mensaje,
+        estado
+    ) VALUES (
+        p_peticion_id,
+        'NUEVA_PETICION',
+        CONCAT(p_solicitante_nombre, ' ha solicitado un trabajador para ', p_perfil_codigo),
+        'PENDIENTE'
+    );
+END //
+
+DELIMITER ;
+```
+
+### 0.11 Tabla SQL: alertas_peticion
+
+```sql
+CREATE TABLE IF NOT EXISTS alertas_peticion (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    peticion_id INT NOT NULL,
+    tipo_alerta ENUM('NUEVA_PETICION', 'PETICION_CUBIERTA', 'PETICION_CANCELADA') NOT NULL,
+    mensaje TEXT,
+    estado ENUM('PENDIENTE', 'VISTA', 'COMPLETADA') DEFAULT 'PENDIENTE',
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_peticion (peticion_id),
+    INDEX idx_estado (estado),
+    FOREIGN KEY (peticion_id) REFERENCES peticiones_trabajador(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+### 0.12 Procedimiento: Publicar Oferta
+
+```sql
+DELIMITER //
+
+CREATE PROCEDURE IF NOT EXISTS sp_publicar_oferta(
+    IN p_peticion_id INT,
+    IN p_publicado_en VARCHAR(100),
+    IN p_fecha_desde DATE,
+    IN p_fecha_hasta DATE
+)
+BEGIN
+    UPDATE peticiones_trabajador
+    SET publicado_en = p_publicado_en,
+        fecha_publicacion_desde = p_fecha_desde,
+        fecha_publicacion_hasta = p_fecha_hasta,
+        fecha_modificacion = NOW()
+    WHERE id = p_peticion_id;
+END //
+
+DELIMITER ;
+```
+
+### 0.13 Procedimiento: Cubrir Peticion
+
+```sql
+DELIMITER //
+
+CREATE PROCEDURE IF NOT EXISTS sp_cubrir_peticion(
+    IN p_peticion_id INT,
+    IN p_candidato_id BIGINT UNSIGNED
+)
+BEGIN
+    -- Actualizar peticion
+    UPDATE peticiones_trabajador
+    SET estado = 'CUBIERTA',
+        candidato_contratado_id = p_candidato_id,
+        fecha_cubierta = CURDATE(),
+        fecha_modificacion = NOW()
+    WHERE id = p_peticion_id;
+
+    -- Crear alerta de confirmacion
+    INSERT INTO alertas_peticion (
+        peticion_id,
+        tipo_alerta,
+        mensaje,
+        estado
+    ) VALUES (
+        p_peticion_id,
+        'PETICION_CUBIERTA',
+        CONCAT('La peticion #', p_peticion_id, ' ha sido cubierta'),
+        'PENDIENTE'
+    );
+END //
+
+DELIMITER ;
 ```
 
 ---

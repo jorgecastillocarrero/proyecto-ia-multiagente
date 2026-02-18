@@ -633,6 +633,155 @@ GROUP BY se.entrevistador_id;
 
 
 -- =============================================================================
+-- SECUENCIA 0: PETICION DE TRABAJADOR
+-- Inicio del proceso de seleccion
+-- =============================================================================
+
+-- Tabla: peticiones_trabajador
+CREATE TABLE IF NOT EXISTS peticiones_trabajador (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    perfil_codigo VARCHAR(50) NOT NULL,
+    solicitante_rol ENUM('GERENTE', 'DIRECTOR_RRHH') NOT NULL,
+    solicitante_nombre VARCHAR(100),
+
+    -- Publicacion
+    publicado_en VARCHAR(100) COMMENT 'InfoJobs, LinkedIn, etc.',
+    fecha_publicacion_desde DATE,
+    fecha_publicacion_hasta DATE,
+
+    -- Estado
+    estado ENUM('ABIERTA', 'EN_PROCESO', 'CUBIERTA', 'CANCELADA') DEFAULT 'ABIERTA',
+
+    -- Relacion con candidato contratado (cuando se cubre)
+    candidato_contratado_id BIGINT UNSIGNED,
+    fecha_cubierta DATE,
+
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    INDEX idx_perfil (perfil_codigo),
+    INDEX idx_estado (estado),
+    INDEX idx_fecha (fecha_creacion)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- Tabla: alertas_peticion
+CREATE TABLE IF NOT EXISTS alertas_peticion (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    peticion_id INT NOT NULL,
+    tipo_alerta ENUM('NUEVA_PETICION', 'PETICION_CUBIERTA', 'PETICION_CANCELADA') NOT NULL,
+    mensaje TEXT,
+    estado ENUM('PENDIENTE', 'VISTA', 'COMPLETADA') DEFAULT 'PENDIENTE',
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_peticion (peticion_id),
+    INDEX idx_estado (estado),
+    FOREIGN KEY (peticion_id) REFERENCES peticiones_trabajador(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- Añadir columna peticion_id a candidatos
+-- ALTER TABLE candidatos ADD COLUMN peticion_id INT;
+-- ALTER TABLE candidatos ADD INDEX idx_peticion (peticion_id);
+
+
+-- Procedimiento: Crear peticion de trabajador
+DELIMITER //
+
+CREATE PROCEDURE IF NOT EXISTS sp_crear_peticion_trabajador(
+    IN p_perfil_codigo VARCHAR(50),
+    IN p_solicitante_rol ENUM('GERENTE', 'DIRECTOR_RRHH'),
+    IN p_solicitante_nombre VARCHAR(100),
+    OUT p_peticion_id INT
+)
+BEGIN
+    -- Crear peticion
+    INSERT INTO peticiones_trabajador (
+        perfil_codigo,
+        solicitante_rol,
+        solicitante_nombre,
+        estado
+    ) VALUES (
+        p_perfil_codigo,
+        p_solicitante_rol,
+        p_solicitante_nombre,
+        'ABIERTA'
+    );
+
+    SET p_peticion_id = LAST_INSERT_ID();
+
+    -- Crear alerta automatica
+    INSERT INTO alertas_peticion (
+        peticion_id,
+        tipo_alerta,
+        mensaje,
+        estado
+    ) VALUES (
+        p_peticion_id,
+        'NUEVA_PETICION',
+        CONCAT(p_solicitante_nombre, ' ha solicitado un trabajador para ', p_perfil_codigo),
+        'PENDIENTE'
+    );
+END //
+
+DELIMITER ;
+
+
+-- Procedimiento: Publicar oferta
+DELIMITER //
+
+CREATE PROCEDURE IF NOT EXISTS sp_publicar_oferta(
+    IN p_peticion_id INT,
+    IN p_publicado_en VARCHAR(100),
+    IN p_fecha_desde DATE,
+    IN p_fecha_hasta DATE
+)
+BEGIN
+    UPDATE peticiones_trabajador
+    SET publicado_en = p_publicado_en,
+        fecha_publicacion_desde = p_fecha_desde,
+        fecha_publicacion_hasta = p_fecha_hasta,
+        fecha_modificacion = NOW()
+    WHERE id = p_peticion_id;
+END //
+
+DELIMITER ;
+
+
+-- Procedimiento: Cubrir peticion
+DELIMITER //
+
+CREATE PROCEDURE IF NOT EXISTS sp_cubrir_peticion(
+    IN p_peticion_id INT,
+    IN p_candidato_id BIGINT UNSIGNED
+)
+BEGIN
+    -- Actualizar peticion
+    UPDATE peticiones_trabajador
+    SET estado = 'CUBIERTA',
+        candidato_contratado_id = p_candidato_id,
+        fecha_cubierta = CURDATE(),
+        fecha_modificacion = NOW()
+    WHERE id = p_peticion_id;
+
+    -- Crear alerta de confirmacion
+    INSERT INTO alertas_peticion (
+        peticion_id,
+        tipo_alerta,
+        mensaje,
+        estado
+    ) VALUES (
+        p_peticion_id,
+        'PETICION_CUBIERTA',
+        CONCAT('La peticion #', p_peticion_id, ' ha sido cubierta'),
+        'PENDIENTE'
+    );
+END //
+
+DELIMITER ;
+
+
+-- =============================================================================
 -- INTEGRACION ERP: CONTRATADO → OPERADORES
 -- =============================================================================
 
