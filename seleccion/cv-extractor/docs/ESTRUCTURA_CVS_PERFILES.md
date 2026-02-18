@@ -3176,5 +3176,100 @@ Solo cambia cuando hay un **nuevo contrato** (no modificacion):
 
 ---
 
+## 23. INTEGRACION DE BASES DE DATOS
+
+### 23.1 Proyectos Integrados
+
+Los tres proyectos comparten la misma base de datos MySQL:
+
+| Proyecto | Descripcion | Tablas Principales |
+|----------|-------------|-------------------|
+| **cv-extractor** | Extraccion y clasificacion de CVs | candidatos, perfiles, peticiones_trabajador |
+| **RRHH_Flujo_Trabajadores** | Gestion de trabajadores con contrato | contratos_usuario, operadores, calendario_anual |
+| **proyecto-ia-multiagente** | Sistema IA general | Varias tablas de IA |
+
+### 23.2 Conexion Unificada
+
+```
+Base de Datos: gestion.pescadoslacarihuela.es
+Host: 192.168.1.133
+Puerto: 3306
+Usuario: root
+```
+
+### 23.3 Tablas Compartidas
+
+#### Tabla: `nuevo_carihuela_jorge_calendario_anual`
+
+Generada por el proyecto RRHH_Flujo_Trabajadores, usada por cv-extractor:
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| id | INT | Clave primaria |
+| semana | INT | Numero de semana (0-52) |
+| dia_semana | VARCHAR(10) | Lunes, Martes, ..., Domingo |
+| fecha | DATE | Fecha del dia |
+| laboral | TINYINT | 1=Laboral, 0=No laboral |
+| festivo | VARCHAR(100) | Nombre del festivo (si aplica) |
+
+**Uso en cv-extractor**: El reporte semanal consulta esta tabla para obtener el numero de semana y los dias laborables.
+
+#### Tabla: `nuevo_carihuela_jorge_semanas_anuales`
+
+Informacion resumida de cada semana del año:
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| semana | INT | Numero de semana |
+| fecha_inicio | DATE | Primer dia de la semana (lunes) |
+| fecha_fin | DATE | Ultimo dia de la semana (domingo) |
+| dias_laborables | INT | Total dias laborables en la semana |
+
+### 23.4 Consulta de Semana Actual
+
+El script `reporte_semanal.py` obtiene la semana actual:
+
+```python
+def get_semana_actual(fecha=None):
+    cursor.execute("""
+        SELECT
+            semana,
+            MIN(fecha) as inicio_semana,
+            MAX(fecha) as fin_semana,
+            SUM(laboral) as dias_laborables
+        FROM nuevo_carihuela_jorge_calendario_anual
+        WHERE semana = (
+            SELECT semana
+            FROM nuevo_carihuela_jorge_calendario_anual
+            WHERE fecha = %s
+        )
+        AND YEAR(fecha) = YEAR(%s)
+        GROUP BY semana
+    """, (fecha, fecha))
+```
+
+### 23.5 Datos Actuales (Semana 8 - 2026)
+
+| Dato | Valor |
+|------|-------|
+| Semana actual | 8 |
+| Fecha inicio | 17/02/2026 (Lunes) |
+| Fecha fin | 23/02/2026 (Domingo) |
+| Dias laborables | 5 |
+
+### 23.6 Procedimientos Anuales
+
+Cada año nuevo se deben ejecutar:
+
+```sql
+-- Generar calendario del año
+CALL generar_calendario_anual(2027);
+
+-- Generar resumen de semanas
+CALL generar_semanas_anuales(2027);
+```
+
+---
+
 *Documento generado: 2026-02-17*
 *Ultima actualizacion: 2026-02-18*

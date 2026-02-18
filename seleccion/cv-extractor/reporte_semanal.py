@@ -36,6 +36,38 @@ def get_connection():
     return pymysql.connect(**DB_CONFIG)
 
 
+def get_semana_actual(fecha=None):
+    """Obtener informacion de la semana actual desde la tabla calendario_anual"""
+    if fecha is None:
+        fecha = datetime.now().date()
+
+    conn = get_connection()
+    try:
+        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+            # Obtener numero de semana y rango de fechas
+            cursor.execute("""
+                SELECT
+                    semana,
+                    MIN(fecha) as inicio_semana,
+                    MAX(fecha) as fin_semana,
+                    SUM(laboral) as dias_laborables
+                FROM nuevo_carihuela_jorge_calendario_anual
+                WHERE semana = (
+                    SELECT semana
+                    FROM nuevo_carihuela_jorge_calendario_anual
+                    WHERE fecha = %s
+                )
+                AND YEAR(fecha) = YEAR(%s)
+                GROUP BY semana
+            """, (fecha, fecha))
+            return cursor.fetchone()
+    except Exception as e:
+        print(f"Aviso: No se pudo obtener semana de calendario_anual: {e}")
+        return None
+    finally:
+        conn.close()
+
+
 def get_peticiones_abiertas():
     """Obtener peticiones de trabajador abiertas"""
     conn = get_connection()
@@ -67,9 +99,20 @@ def generar_reporte_pdf(fecha_reporte=None):
     if fecha_reporte is None:
         fecha_reporte = datetime.now()
 
-    # Calcular semana
-    inicio_semana = fecha_reporte - timedelta(days=fecha_reporte.weekday())
-    fin_semana = inicio_semana + timedelta(days=6)
+    # Obtener semana desde la tabla calendario_anual (integracion con RRHH_Flujo_Trabajadores)
+    semana_info = get_semana_actual(fecha_reporte.date() if hasattr(fecha_reporte, 'date') else fecha_reporte)
+
+    if semana_info:
+        numero_semana = semana_info['semana']
+        inicio_semana = semana_info['inicio_semana']
+        fin_semana = semana_info['fin_semana']
+        dias_laborables = semana_info['dias_laborables']
+    else:
+        # Fallback: calcular localmente si no hay datos en BD
+        numero_semana = fecha_reporte.isocalendar()[1]
+        inicio_semana = fecha_reporte - timedelta(days=fecha_reporte.weekday())
+        fin_semana = inicio_semana + timedelta(days=6)
+        dias_laborables = None
 
     # Nombre del archivo
     nombre_archivo = f"reporte_semanal_{fecha_reporte.strftime('%Y%m%d')}.pdf"
@@ -120,12 +163,23 @@ def generar_reporte_pdf(fecha_reporte=None):
     elementos = []
 
     # Titulo
-    elementos.append(Paragraph("REPORTE SEMANAL DE SELECCION", titulo_style))
+    elementos.append(Paragraph("REPORTE SEMANAL RRHH", titulo_style))
     elementos.append(Paragraph("Pescados La Carihuela", fecha_style))
-    elementos.append(Paragraph(
-        f"Semana del {inicio_semana.strftime('%d/%m/%Y')} al {fin_semana.strftime('%d/%m/%Y')}",
-        fecha_style
-    ))
+
+    # Formatear fechas (pueden ser date o datetime)
+    if hasattr(inicio_semana, 'strftime'):
+        inicio_str = inicio_semana.strftime('%d/%m/%Y')
+        fin_str = fin_semana.strftime('%d/%m/%Y')
+    else:
+        inicio_str = inicio_semana
+        fin_str = fin_semana
+
+    # Mostrar semana con numero
+    texto_semana = f"Semana {numero_semana} - del {inicio_str} al {fin_str}"
+    if dias_laborables:
+        texto_semana += f" ({int(dias_laborables)} dias laborables)"
+
+    elementos.append(Paragraph(texto_semana, fecha_style))
 
     # Seccion 1: Necesidades de Personal
     elementos.append(Paragraph("1. NECESIDADES DE PERSONAL", subtitulo_style))
@@ -185,12 +239,6 @@ def generar_reporte_pdf(fecha_reporte=None):
 
     # Espacio
     elementos.append(Spacer(1, 20))
-
-    # Pie de pagina
-    elementos.append(Paragraph(
-        f"Generado automaticamente el {datetime.now().strftime('%d/%m/%Y a las %H:%M')}",
-        ParagraphStyle('Pie', parent=styles['Normal'], fontSize=8, alignment=TA_CENTER)
-    ))
 
     # Generar PDF
     doc.build(elementos)

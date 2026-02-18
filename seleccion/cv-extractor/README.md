@@ -170,6 +170,10 @@ cv-extractor/
 ├── db_loader.py               # Cargador de datos a MySQL
 ├── extract_cvs.py             # Extractor de PDFs
 ├── extract_cvs_batch.py       # Extractor en lote
+├── reporte_semanal.py         # Generador de PDF semanal
+│
+├── reportes/                  # PDFs generados
+│   └── reporte_semanal_YYYYMMDD.pdf
 │
 ├── sql/
 │   └── schema_mysql.sql       # Schema de base de datos
@@ -178,7 +182,8 @@ cv-extractor/
 │   ├── RESUMEN_PROYECTO.md        # Resumen para direccion
 │   ├── ESPECIFICACION_DASHBOARD.md # Especificacion del dashboard
 │   ├── FLUJO_SELECCION.md         # Documentacion del flujo
-│   └── FLUJO_RRHH.md              # Documentacion RRHH
+│   ├── FLUJO_RRHH.md              # Documentacion RRHH
+│   └── ESTRUCTURA_CVS_PERFILES.md # Documentacion completa del sistema
 │
 └── archive/                   # Archivos obsoletos (PostgreSQL)
     ├── schema.sql
@@ -196,6 +201,12 @@ cv-extractor/
 - **Base de datos**: gestion.pescadoslacarihuela.es
 - **Usuario**: root
 
+### Integracion con Otros Proyectos
+
+Este proyecto comparte base de datos con:
+- **RRHH_Flujo_Trabajadores**: Gestion de trabajadores con contrato, calendario anual
+- **proyecto-ia-multiagente**: Sistema IA general
+
 ### Tablas Principales
 
 | Tabla | Descripcion |
@@ -205,6 +216,8 @@ cv-extractor/
 | motivos_descarte | Catalogo de motivos de descarte |
 | candidatos_descartados | Historial de descartes |
 | reglas_descarte | Reglas configurables |
+| peticiones_trabajador | Peticiones de nuevo personal |
+| nuevo_carihuela_jorge_calendario_anual | Calendario anual (compartida) |
 
 ### Columnas Añadidas a Candidatos
 
@@ -241,4 +254,4 @@ cv-extractor/
 
 ---
 
-*Ultima actualizacion: 2026-02-17*
+*Ultima actualizacion: 2026-02-18*

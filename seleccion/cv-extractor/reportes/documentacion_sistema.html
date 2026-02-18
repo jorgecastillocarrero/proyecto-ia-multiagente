@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Documentacion Sistema RRHH</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #1565C0;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .empresa {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #1565C0;
+            font-size: 16px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #1565C0;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #333;
+            font-size: 14px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+        th {
+            background: #1565C0;
+            color: white;
+            padding: 8px 5px;
+            text-align: left;
+        }
+        td {
+            padding: 6px 5px;
+            border: 1px solid #ddd;
+        }
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .nueva {
+            background: #e8f5e9 !important;
+        }
+        .modificada {
+            background: #fff3e0 !important;
+        }
+        .tag-nueva {
+            background: #4caf50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+        .tag-modificada {
+            background: #ff9800;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+        .nota {
+            background: #e3f2fd;
+            padding: 10px;
+            border-left: 4px solid #1565C0;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+        code {
+            background: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DOCUMENTACION SISTEMA RRHH</h1>
+        <p class="empresa">Pescados La Carihuela</p>
+
+        <!-- SECCION: BASE DE DATOS -->
+        <h2>1. BASE DE DATOS</h2>
+
+        <h3>Conexion</h3>
+        <table>
+            <tr><td><strong>Host</strong></td><td>192.168.1.133</td></tr>
+            <tr><td><strong>Puerto</strong></td><td>3306</td></tr>
+            <tr><td><strong>Base de datos</strong></td><td>gestion.pescadoslacarihuela.es</td></tr>
+            <tr><td><strong>Usuario</strong></td><td>root</td></tr>
+        </table>
+
+        <h3>Tablas NUEVAS <span class="tag-nueva">NUEVO</span></h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tabla</th>
+                    <th>Descripcion</th>
+                    <th>Campos principales</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="nueva">
+                    <td><code>peticiones_trabajador</code></td>
+                    <td>Peticiones de nuevo personal</td>
+                    <td>id, perfil_codigo, posicion, solicitante_rol, fecha_solicitud, publicado_en, estado</td>
+                </tr>
+                <tr class="nueva">
+                    <td><code>alertas_peticion</code></td>
+                    <td>Alertas automaticas de peticiones</td>
+                    <td>id, peticion_id, tipo_alerta, mensaje, estado</td>
+                </tr>
+                <tr class="nueva">
+                    <td><code>perfiles</code></td>
+                    <td>Perfiles profesionales</td>
+                    <td>id, codigo, nombre, descripcion, keywords, oferta_titulo, oferta_descripcion</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Tablas EXISTENTES utilizadas</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tabla</th>
+                    <th>Descripcion</th>
+                    <th>Uso en el sistema</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>operadores</code></td>
+                    <td>Usuarios/Trabajadores</td>
+                    <td>Datos de usuarios, roles (ROLE_ADMIN, ROLE_USER)</td>
+                </tr>
+                <tr>
+                    <td><code>nuevo_carihuela_jorge_calendario_anual</code></td>
+                    <td>Calendario anual</td>
+                    <td>Obtener numero de semana, dias laborables</td>
+                </tr>
+                <tr>
+                    <td><code>candidatos</code></td>
+                    <td>Candidatos extraidos de CVs</td>
+                    <td>Datos de candidatos para seleccion</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- SECCION: ROLES Y PERMISOS -->
+        <h2>2. ROLES Y PERMISOS</h2>
+
+        <h3>Roles en operadores</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Rol</th>
+                    <th>Cantidad</th>
+                    <th>Descripcion</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>ROLE_ADMIN</code></td>
+                    <td>4</td>
+                    <td>Administradores del sistema</td>
+                </tr>
+                <tr>
+                    <td><code>ROLE_USER</code></td>
+                    <td>193</td>
+                    <td>Trabajadores normales</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Administradores (ROLE_ADMIN)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Antonio Manuel</td><td>-</td></tr>
+                <tr><td>Jorge</td><td>jorge@pescadoslacarihuela.es</td></tr>
+                <tr><td>Oficina</td><td>-</td></tr>
+                <tr><td>Servicio Tecnico</td><td>-</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Modulos de Gestion</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Modulo</th>
+                    <th>Usuarios asignados</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>Gestion Vehiculos</td><td>CARLOS</td></tr>
+                <tr><td>2</td><td>Gestion Proveedores</td><td>CARLOS</td></tr>
+                <tr><td>3</td><td>Gestion Usuarios</td><td>CARLOS</td></tr>
+                <tr><td>4</td><td>Gestion Docu. Trabajadores</td><td>CARLOS</td></tr>
+                <tr><td>5</td><td>Gestion Articulos</td><td>CARLOS, JORGE LUIS</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Lista de Permisos</h3>
+        <div class="nota" style="background: #ffebee; border-left-color: #f44336;">
+            <strong>TABLA NO ENCONTRADA:</strong> Los permisos no estan almacenados en base de datos. Estan definidos en el codigo de la aplicacion (Laravel/PHP).
+            <br>Tabla esperada: <code>zsimj_base_permissions</code> (existe pero vacia - 0 filas)
+        </div>
+
+        <h3>Permisos NUEVOS a crear <span class="tag-nueva">PENDIENTE</span></h3>
+        <div class="nota" style="background: #fff3e0; border-left-color: #ff9800;">
+            <strong>ACCION REQUERIDA:</strong> Crear el siguiente permiso en la aplicacion y asignarlo a los roles correspondientes.
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Permiso</th>
+                    <th>Descripcion</th>
+                    <th>Roles sugeridos</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="nueva">
+                    <td><strong>Buscar Nuevos Perfiles</strong></td>
+                    <td>Acceso al modulo de seleccion RRHH para buscar y gestionar candidatos</td>
+                    <td>ROLE_ADMIN, Director RRHH, Gerente</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- SECCION: PETICION DE TRABAJADOR -->
+        <h2>3. PETICION DE TRABAJADOR</h2>
+
+        <p>El proceso de seleccion comienza cuando el <strong>Gerente</strong> o el <strong>Director de RRHH</strong> solicita un nuevo trabajador.</p>
+
+        <h3>Datos de la Peticion</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Campo</th>
+                    <th>Descripcion</th>
+                    <th>Obligatorio</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>ID</td><td>Identificador unico</td><td>Auto</td></tr>
+                <tr><td>Perfil</td><td>PESCADERIA, LOGISTICA, PRODUCCION, ADMINISTRATIVO, GESTION, BECARIO</td><td>SI</td></tr>
+                <tr><td>Posicion</td><td>Nombre especifico del puesto</td><td>SI</td></tr>
+                <tr><td>Solicitante</td><td>Gerente o Director RRHH</td><td>Auto</td></tr>
+                <tr><td>Fecha Solicitud</td><td>Fecha de creacion</td><td>SI</td></tr>
+                <tr><td>Publicado en</td><td>Donde se ha publicado (InfoJobs, etc.)</td><td>NO</td></tr>
+                <tr><td>Desde/Hasta</td><td>Periodo de publicacion</td><td>NO</td></tr>
+                <tr><td>Estado</td><td>ABIERTA, EN_PROCESO, CUBIERTA, CANCELADA</td><td>Auto</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Peticiones Actuales</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Perfil</th>
+                    <th>Posicion</th>
+                    <th>Fecha Sol.</th>
+                    <th>Publicado</th>
+                    <th>Desde</th>
+                    <th>Hasta</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>LOGISTICA</td>
+                    <td>Operario/a Logistica</td>
+                    <td>15/01/2026</td>
+                    <td>InfoJobs</td>
+                    <td>27/01/2026</td>
+                    <td>28/03/2026</td>
+                    <td>ABIERTA</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>PESCADERIA</td>
+                    <td>Dependiente/a Pescaderia</td>
+                    <td>13/02/2026</td>
+                    <td>InfoJobs</td>
+                    <td>13/02/2026</td>
+                    <td>14/04/2026</td>
+                    <td>ABIERTA</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>BECARIO</td>
+                    <td>Becario Administracion</td>
+                    <td>01/02/2026</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>ABIERTA</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- SECCION: PERFILES -->
+        <h2>4. PERFILES PROFESIONALES</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Codigo</th>
+                    <th>Descripcion</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>PESCADERIA</td><td>Pescaderia, carniceria, comercio</td></tr>
+                <tr><td>LOGISTICA</td><td>Almacen, reparto, transporte</td></tr>
+                <tr><td>PRODUCCION</td><td>Fabrica, envasado, sushi</td></tr>
+                <tr><td>ADMINISTRATIVO</td><td>Oficina, secretariado</td></tr>
+                <tr><td>GESTION</td><td>Grados universitarios</td></tr>
+                <tr><td>BECARIO</td><td>Practicas, formacion</td></tr>
+            </tbody>
+        </table>
+
+        <!-- SECCION: ARCHIVOS -->
+        <h2>5. ARCHIVOS DEL SISTEMA</h2>
+
+        <h3>Scripts Python <span class="tag-nueva">NUEVO</span></h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Archivo</th>
+                    <th>Descripcion</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="nueva">
+                    <td><code>reporte_semanal.py</code></td>
+                    <td>Genera PDF semanal automatico (Lunes 05:00)</td>
+                </tr>
+                <tr class="nueva">
+                    <td><code>setup_peticiones.py</code></td>
+                    <td>Crear tablas de peticiones (ejecutar 1 vez)</td>
+                </tr>
+                <tr class="nueva">
+                    <td><code>generar_documentacion_pdf.py</code></td>
+                    <td>Genera PDF de documentacion</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Scripts SQL <span class="tag-nueva">NUEVO</span></h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Archivo</th>
+                    <th>Descripcion</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="nueva">
+                    <td><code>sql/crear_peticiones.sql</code></td>
+                    <td>SQL para crear tablas peticiones_trabajador y alertas_peticion</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Directorios</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Directorio</th>
+                    <th>Contenido</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>reportes/</code></td><td>PDFs y HTMLs generados</td></tr>
+                <tr><td><code>sql/</code></td><td>Scripts SQL</td></tr>
+                <tr><td><code>docs/</code></td><td>Documentacion markdown</td></tr>
+            </tbody>
+        </table>
+
+        <div class="nota">
+            <strong>Leyenda:</strong><br>
+            <span class="tag-nueva">NUEVO</span> = Tabla/archivo creado nuevo<br>
+            <span class="tag-modificada">MODIFICADA</span> = Tabla existente con cambios
+        </div>
+
+    </div>
+</body>
+</html>
