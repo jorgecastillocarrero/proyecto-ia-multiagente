@@ -641,8 +641,10 @@ GROUP BY se.entrevistador_id;
 CREATE TABLE IF NOT EXISTS peticiones_trabajador (
     id INT AUTO_INCREMENT PRIMARY KEY,
     perfil_codigo VARCHAR(50) NOT NULL,
+    posicion VARCHAR(200) NOT NULL COMMENT 'Nombre especifico del puesto',
     solicitante_rol ENUM('GERENTE', 'DIRECTOR_RRHH') NOT NULL,
     solicitante_nombre VARCHAR(100),
+    fecha_solicitud DATE NOT NULL,
 
     -- Publicacion
     publicado_en VARCHAR(100) COMMENT 'InfoJobs, LinkedIn, etc.',
@@ -661,8 +663,15 @@ CREATE TABLE IF NOT EXISTS peticiones_trabajador (
 
     INDEX idx_perfil (perfil_codigo),
     INDEX idx_estado (estado),
-    INDEX idx_fecha (fecha_creacion)
+    INDEX idx_fecha (fecha_solicitud)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Datos iniciales: Peticiones de trabajador
+INSERT INTO peticiones_trabajador (perfil_codigo, posicion, solicitante_rol, solicitante_nombre, fecha_solicitud, publicado_en, fecha_publicacion_desde, fecha_publicacion_hasta, estado) VALUES
+('LOGISTICA', 'Operario/a Logística', 'GERENTE', 'Gerente', '2026-01-15', 'InfoJobs', '2026-01-27', '2026-03-28', 'ABIERTA'),
+('PESCADERIA', 'Dependiente/a Pescadería', 'GERENTE', 'Gerente', '2026-02-13', 'InfoJobs', '2026-02-13', '2026-04-14', 'ABIERTA'),
+('BECARIO', 'Becario Administración', 'GERENTE', 'Gerente', '2026-02-01', NULL, NULL, NULL, 'ABIERTA')
+ON DUPLICATE KEY UPDATE posicion = VALUES(posicion);
 
 
 -- Tabla: alertas_peticion
@@ -690,21 +699,27 @@ DELIMITER //
 
 CREATE PROCEDURE IF NOT EXISTS sp_crear_peticion_trabajador(
     IN p_perfil_codigo VARCHAR(50),
+    IN p_posicion VARCHAR(200),
     IN p_solicitante_rol ENUM('GERENTE', 'DIRECTOR_RRHH'),
     IN p_solicitante_nombre VARCHAR(100),
+    IN p_fecha_solicitud DATE,
     OUT p_peticion_id INT
 )
 BEGIN
     -- Crear peticion
     INSERT INTO peticiones_trabajador (
         perfil_codigo,
+        posicion,
         solicitante_rol,
         solicitante_nombre,
+        fecha_solicitud,
         estado
     ) VALUES (
         p_perfil_codigo,
+        p_posicion,
         p_solicitante_rol,
         p_solicitante_nombre,
+        p_fecha_solicitud,
         'ABIERTA'
     );
 
@@ -719,7 +734,7 @@ BEGIN
     ) VALUES (
         p_peticion_id,
         'NUEVA_PETICION',
-        CONCAT(p_solicitante_nombre, ' ha solicitado un trabajador para ', p_perfil_codigo),
+        CONCAT(p_solicitante_nombre, ' ha solicitado ', p_posicion, ' (', p_perfil_codigo, ')'),
         'PENDIENTE'
     );
 END //

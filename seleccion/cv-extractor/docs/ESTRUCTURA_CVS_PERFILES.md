@@ -52,9 +52,10 @@ GERENTE / DIRECTOR RRHH
 | Campo | Descripcion | Obligatorio |
 |-------|-------------|-------------|
 | ID | Identificador unico | Auto |
-| Perfil | PESCADERIA, LOGISTICA, PRODUCCION, ADMINISTRATIVO, GESTION | SI |
+| Perfil | PESCADERIA, LOGISTICA, PRODUCCION, ADMINISTRATIVO, GESTION, BECARIO | SI |
+| Posicion | Nombre especifico del puesto (ej: Operario/a Logística) | SI |
 | Solicitante | Gerente o Director RRHH | Auto |
-| Fecha Solicitud | Fecha de creacion de la peticion | Auto |
+| Fecha Solicitud | Fecha de creacion de la peticion | SI |
 | Publicado en | Donde se ha publicado (InfoJobs, LinkedIn, etc.) | NO |
 | Desde | Fecha inicio publicacion | NO |
 | Hasta | Fecha fin publicacion | NO |
@@ -392,6 +393,43 @@ BEGIN
 END //
 
 DELIMITER ;
+```
+
+### 0.14 Reporte Semanal PDF
+
+Se genera automaticamente cada **lunes a las 05:00** (hora España) y se envia a las personas asignadas.
+
+#### Contenido del Reporte
+
+**1. Necesidades de Personal**
+
+Tabla con todas las peticiones abiertas:
+
+```
+┌────┬─────────────┬──────────────────────────┬───────────────┬────────────────┬───────────┬────────────┬────────────┬───────────┐
+│ ID │ Perfil      │ Posición                 │ Solicitante   │ Fecha Solicitud│ Publicado │ Desde      │ Hasta      │ Estado    │
+├────┼─────────────┼──────────────────────────┼───────────────┼────────────────┼───────────┼────────────┼────────────┼───────────┤
+│ 1  │ LOGISTICA   │ Operario/a Logística     │ Gerente       │ 15/01/2026     │ InfoJobs  │ 27/01/2026 │ 28/03/2026 │ ABIERTA   │
+│ 2  │ PESCADERIA  │ Dependiente/a Pescadería │ Gerente       │ 13/02/2026     │ InfoJobs  │ 13/02/2026 │ 14/04/2026 │ ABIERTA   │
+│ 3  │ BECARIO     │ Becario Administración   │ Gerente       │ 01/02/2026     │ -         │ -          │ -          │ ABIERTA   │
+└────┴─────────────┴──────────────────────────┴───────────────┴────────────────┴───────────┴────────────┴────────────┴───────────┘
+```
+
+#### Script: reporte_semanal.py
+
+```bash
+# Generar reporte manualmente
+python reporte_semanal.py
+
+# El PDF se guarda en: cv-extractor/reportes/reporte_semanal_YYYYMMDD.pdf
+```
+
+#### Programacion Automatica (cron)
+
+```bash
+# Añadir a crontab para ejecucion automatica
+# Lunes a las 05:00 hora España
+0 5 * * 1 cd /ruta/cv-extractor && python reporte_semanal.py
 ```
 
 ---

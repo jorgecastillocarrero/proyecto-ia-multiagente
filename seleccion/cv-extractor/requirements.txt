@@ -2,3 +2,4 @@ pdfplumber==0.11.0
 anthropic==0.40.0
 pymysql==1.1.0
 python-dotenv==1.0.1
+reportlab==4.1.0
