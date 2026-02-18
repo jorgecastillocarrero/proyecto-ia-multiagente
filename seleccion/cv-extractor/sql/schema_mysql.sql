@@ -1397,5 +1397,374 @@ DELIMITER ;
 
 
 -- =============================================================================
+-- SECUENCIA 16: ALERTAS VENCIMIENTO CONTRATOS
+-- Sistema de alertas para contratos proximos a vencer
+-- =============================================================================
+
+-- Estados del contrato por vencer
+ALTER TABLE firma_contratos
+    ADD COLUMN IF NOT EXISTS estado_vencimiento ENUM(
+        'ACTIVO',
+        'PROXIMO_VENCER',
+        'PENDIENTE_DECISION',
+        'RENOVADO',
+        'FINALIZADO',
+        'NO_RENOVADO'
+    ) DEFAULT 'ACTIVO',
+    ADD COLUMN IF NOT EXISTS alertas_enviadas INT DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS ultima_alerta_enviada DATETIME,
+    ADD COLUMN IF NOT EXISTS decision_renovacion ENUM('RENOVAR', 'FINALIZAR', 'MODIFICAR', 'PENDIENTE') DEFAULT 'PENDIENTE',
+    ADD COLUMN IF NOT EXISTS fecha_decision DATETIME,
+    ADD COLUMN IF NOT EXISTS decidido_por VARCHAR(100);
+
+
+-- =============================================================================
+-- SECUENCIA 17: TABLA ALERTAS VENCIMIENTO
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS alertas_vencimiento_contratos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    operador_id INT NOT NULL,
+    contrato_id INT NOT NULL,
+
+    -- Datos del contrato
+    fecha_fin_contrato DATE NOT NULL,
+    dias_restantes INT NOT NULL,
+
+    -- Alerta
+    tipo_alerta ENUM(
+        'AVISO_15_DIAS',
+        'RECORDATORIO_RECURRENTE',
+        'ULTIMO_DIA',
+        'CONTRATO_VENCIDO'
+    ) NOT NULL,
+
+    destinatario_rol ENUM('DIRECTOR_RRHH', 'HERMI_SS') NOT NULL,
+    destinatario_email VARCHAR(255),
+
+    asunto VARCHAR(255),
+    mensaje TEXT,
+
+    -- Estado
+    estado ENUM('PENDIENTE', 'ENVIADA', 'RESUELTA') DEFAULT 'PENDIENTE',
+    fecha_envio DATETIME,
+    resuelto TINYINT(1) DEFAULT 0,
+    fecha_resolucion DATETIME,
+
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_operador (operador_id),
+    INDEX idx_contrato (contrato_id),
+    INDEX idx_fecha_fin (fecha_fin_contrato),
+    INDEX idx_estado (estado)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- SECUENCIA 18: CONFIGURACION ALERTAS POR ROL
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS config_alertas_rol (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    rol ENUM('DIRECTOR_RRHH', 'HERMI_SS', 'TRABAJADOR', 'PREVENCION') NOT NULL,
+    tipo_alerta VARCHAR(50) NOT NULL,
+    canal ENUM('DASHBOARD', 'EMAIL', 'SMS', 'LLAMADA') NOT NULL,
+    frecuencia ENUM('INMEDIATA', 'DIARIA', 'CADA_2_DIAS', 'SEMANAL') NOT NULL,
+    activo TINYINT(1) DEFAULT 1,
+    email_destino VARCHAR(255),
+    telefono_destino VARCHAR(20),
+
+    UNIQUE KEY uk_rol_alerta_canal (rol, tipo_alerta, canal),
+    INDEX idx_rol (rol),
+    INDEX idx_tipo (tipo_alerta)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Configuracion por defecto
+INSERT INTO config_alertas_rol (rol, tipo_alerta, canal, frecuencia) VALUES
+-- Director RRHH
+('DIRECTOR_RRHH', 'VENCIMIENTO_CONTRATO', 'DASHBOARD', 'INMEDIATA'),
+('DIRECTOR_RRHH', 'NUEVO_CONTRATADO', 'DASHBOARD', 'INMEDIATA'),
+('DIRECTOR_RRHH', 'NUEVO_CONTRATADO', 'EMAIL', 'INMEDIATA'),
+('DIRECTOR_RRHH', 'FIRMA_CONTRATO', 'DASHBOARD', 'INMEDIATA'),
+-- Hermi SS
+('HERMI_SS', 'VENCIMIENTO_CONTRATO', 'EMAIL', 'CADA_2_DIAS'),
+('HERMI_SS', 'PENDIENTE_ALTA', 'EMAIL', 'INMEDIATA'),
+('HERMI_SS', 'DATOS_COMPLETOS', 'EMAIL', 'INMEDIATA'),
+-- Trabajador
+('TRABAJADOR', 'FIRMA_CONTRATO', 'EMAIL', 'INMEDIATA'),
+('TRABAJADOR', 'DOCUMENTOS_PENDIENTES', 'EMAIL', 'SEMANAL')
+ON DUPLICATE KEY UPDATE frecuencia = VALUES(frecuencia);
+
+
+-- =============================================================================
+-- SECUENCIA 19: VISTA CONTRATOS PROXIMOS A VENCER
+-- =============================================================================
+CREATE OR REPLACE VIEW v_contratos_proximos_vencer AS
+SELECT
+    fc.id AS contrato_id,
+    fc.operador_id,
+    CONCAT(o.Nombre, ' ', o.Apellido1) AS trabajador,
+    fc.tipo_contrato,
+    fc.fecha_inicio,
+    fc.fecha_fin,
+    DATEDIFF(fc.fecha_fin, CURDATE()) AS dias_restantes,
+    fc.categoria_profesional_id,
+    fc.horas_semana,
+    fc.estado_vencimiento,
+    fc.decision_renovacion,
+    fc.alertas_enviadas,
+    CASE
+        WHEN DATEDIFF(fc.fecha_fin, CURDATE()) < 0 THEN 'VENCIDO'
+        WHEN DATEDIFF(fc.fecha_fin, CURDATE()) <= 1 THEN 'ULTIMO_DIA'
+        WHEN DATEDIFF(fc.fecha_fin, CURDATE()) <= 15 THEN 'URGENTE'
+        WHEN DATEDIFF(fc.fecha_fin, CURDATE()) <= 30 THEN 'PROXIMO'
+        ELSE 'OK'
+    END AS estado_alerta
+FROM firma_contratos fc
+JOIN operadores o ON fc.operador_id = o.id
+WHERE fc.fecha_fin IS NOT NULL
+AND fc.estado = 'FIRMADO_AMBOS'
+AND fc.estado_vencimiento NOT IN ('RENOVADO', 'FINALIZADO')
+ORDER BY dias_restantes ASC;
+
+
+-- =============================================================================
+-- SECUENCIA 20: PROCEDIMIENTO - Generar alertas vencimiento
+-- (Ejecutar diariamente via cron)
+-- =============================================================================
+DELIMITER //
+
+CREATE PROCEDURE IF NOT EXISTS sp_generar_alertas_vencimiento()
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE v_operador_id INT;
+    DECLARE v_contrato_id INT;
+    DECLARE v_nombre VARCHAR(100);
+    DECLARE v_fecha_fin DATE;
+    DECLARE v_dias_restantes INT;
+    DECLARE v_tipo_contrato VARCHAR(100);
+    DECLARE v_categoria INT;
+    DECLARE v_horas INT;
+    DECLARE v_ultima_alerta DATETIME;
+    DECLARE v_alertas_enviadas INT;
+
+    -- Cursor para contratos que vencen en 15 dias o menos
+    DECLARE cur_contratos CURSOR FOR
+        SELECT
+            fc.operador_id,
+            fc.id,
+            CONCAT(o.Nombre, ' ', o.Apellido1),
+            fc.fecha_fin,
+            DATEDIFF(fc.fecha_fin, CURDATE()),
+            fc.tipo_contrato,
+            fc.categoria_profesional_id,
+            fc.horas_semana,
+            fc.ultima_alerta_enviada,
+            fc.alertas_enviadas
+        FROM firma_contratos fc
+        JOIN operadores o ON fc.operador_id = o.id
+        WHERE fc.fecha_fin IS NOT NULL
+        AND fc.estado = 'FIRMADO_AMBOS'
+        AND fc.estado_vencimiento NOT IN ('RENOVADO', 'FINALIZADO')
+        AND DATEDIFF(fc.fecha_fin, CURDATE()) <= 15
+        AND DATEDIFF(fc.fecha_fin, CURDATE()) >= 0;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN cur_contratos;
+
+    read_loop: LOOP
+        FETCH cur_contratos INTO v_operador_id, v_contrato_id, v_nombre, v_fecha_fin,
+            v_dias_restantes, v_tipo_contrato, v_categoria, v_horas,
+            v_ultima_alerta, v_alertas_enviadas;
+
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        -- Verificar si han pasado 2 dias desde la ultima alerta (para Hermi)
+        IF v_ultima_alerta IS NULL OR DATEDIFF(NOW(), v_ultima_alerta) >= 2 THEN
+
+            -- Actualizar estado del contrato
+            UPDATE firma_contratos
+            SET estado_vencimiento = 'PROXIMO_VENCER',
+                alertas_enviadas = alertas_enviadas + 1,
+                ultima_alerta_enviada = NOW()
+            WHERE id = v_contrato_id;
+
+            -- Alerta para Dashboard Director RRHH
+            INSERT INTO alertas_vencimiento_contratos (
+                operador_id, contrato_id, fecha_fin_contrato, dias_restantes,
+                tipo_alerta, destinatario_rol, asunto, mensaje, estado
+            ) VALUES (
+                v_operador_id, v_contrato_id, v_fecha_fin, v_dias_restantes,
+                CASE
+                    WHEN v_dias_restantes <= 1 THEN 'ULTIMO_DIA'
+                    ELSE 'RECORDATORIO_RECURRENTE'
+                END,
+                'DIRECTOR_RRHH',
+                CONCAT(
+                    CASE WHEN v_dias_restantes <= 1 THEN '[MUY URGENTE] ' ELSE '[URGENTE] ' END,
+                    'Contrato expira - ', v_nombre, ' - ', v_fecha_fin
+                ),
+                CONCAT(
+                    'El contrato de ', v_nombre, ' expira el ', v_fecha_fin, '.\n',
+                    'Quedan ', v_dias_restantes, ' dias para la finalizacion.\n\n',
+                    'DATOS DEL TRABAJADOR:\n',
+                    '- Nombre: ', v_nombre, '\n',
+                    '- Tipo contrato: ', COALESCE(v_tipo_contrato, 'N/A'), '\n',
+                    '- Categoria: ', COALESCE(v_categoria, 'N/A'), '\n',
+                    '- Horas: ', COALESCE(v_horas, 'N/A'), ' h/semana'
+                ),
+                'PENDIENTE'
+            );
+
+            -- Alerta EMAIL para Hermi (cada 2 dias)
+            INSERT INTO alertas_vencimiento_contratos (
+                operador_id, contrato_id, fecha_fin_contrato, dias_restantes,
+                tipo_alerta, destinatario_rol, asunto, mensaje, estado
+            ) VALUES (
+                v_operador_id, v_contrato_id, v_fecha_fin, v_dias_restantes,
+                CASE
+                    WHEN v_dias_restantes <= 1 THEN 'ULTIMO_DIA'
+                    ELSE 'RECORDATORIO_RECURRENTE'
+                END,
+                'HERMI_SS',
+                CONCAT(
+                    CASE WHEN v_dias_restantes <= 1 THEN '[MUY URGENTE] ' ELSE '[URGENTE] ' END,
+                    'Contrato expira - ', v_nombre, ' - ', v_fecha_fin
+                ),
+                CONCAT(
+                    'El contrato de ', v_nombre, ' expira el ', v_fecha_fin, '.\n',
+                    'Quedan ', v_dias_restantes, ' dias para la finalizacion.\n\n',
+                    'DATOS DEL TRABAJADOR:\n',
+                    '- Nombre: ', v_nombre, '\n',
+                    '- Tipo contrato: ', COALESCE(v_tipo_contrato, 'N/A'), '\n',
+                    '- Categoria: ', COALESCE(v_categoria, 'N/A'), '\n',
+                    '- Horas: ', COALESCE(v_horas, 'N/A'), ' h/semana\n\n',
+                    'ACCIONES PENDIENTES:\n',
+                    '[ ] Decidir renovacion o finalizacion\n',
+                    '[ ] Si renovacion: preparar nuevo contrato\n',
+                    '[ ] Si finalizacion: preparar baja SS\n\n',
+                    'Este email se enviara cada 2 dias hasta que se resuelva.'
+                ),
+                'PENDIENTE'
+            );
+
+        END IF;
+
+    END LOOP;
+
+    CLOSE cur_contratos;
+
+END //
+
+DELIMITER ;
+
+
+-- =============================================================================
+-- SECUENCIA 21: PROCEDIMIENTO - Resolver vencimiento (renovar/finalizar)
+-- =============================================================================
+DELIMITER //
+
+CREATE PROCEDURE IF NOT EXISTS sp_resolver_vencimiento(
+    IN p_contrato_id INT,
+    IN p_decision ENUM('RENOVAR', 'FINALIZAR', 'MODIFICAR'),
+    IN p_decidido_por VARCHAR(100)
+)
+BEGIN
+    DECLARE v_operador_id INT;
+    DECLARE v_nombre VARCHAR(100);
+
+    -- Obtener datos
+    SELECT fc.operador_id, CONCAT(o.Nombre, ' ', o.Apellido1)
+    INTO v_operador_id, v_nombre
+    FROM firma_contratos fc
+    JOIN operadores o ON fc.operador_id = o.id
+    WHERE fc.id = p_contrato_id;
+
+    -- Actualizar estado segun decision
+    UPDATE firma_contratos
+    SET estado_vencimiento = CASE
+            WHEN p_decision = 'RENOVAR' THEN 'RENOVADO'
+            WHEN p_decision = 'FINALIZAR' THEN 'NO_RENOVADO'
+            WHEN p_decision = 'MODIFICAR' THEN 'PENDIENTE_DECISION'
+        END,
+        decision_renovacion = p_decision,
+        fecha_decision = NOW(),
+        decidido_por = p_decidido_por
+    WHERE id = p_contrato_id;
+
+    -- Marcar alertas como resueltas
+    UPDATE alertas_vencimiento_contratos
+    SET resuelto = 1,
+        fecha_resolucion = NOW(),
+        estado = 'RESUELTA'
+    WHERE contrato_id = p_contrato_id
+    AND resuelto = 0;
+
+    -- Si es RENOVAR, crear nuevo registro de contrato (pendiente datos)
+    IF p_decision = 'RENOVAR' THEN
+        INSERT INTO firma_contratos (operador_id, candidato_id, estado)
+        SELECT operador_id, candidato_id, 'PENDIENTE_ALTA'
+        FROM firma_contratos WHERE id = p_contrato_id;
+    END IF;
+
+    -- Si es FINALIZAR, notificar a Hermi para baja SS
+    IF p_decision = 'FINALIZAR' THEN
+        INSERT INTO alertas_contratacion (
+            operador_id, tipo_alerta, destinatario_rol, asunto, mensaje
+        ) VALUES (
+            v_operador_id,
+            'ALERTA_3_HERMI_DATOS_COMPLETOS',
+            'HERMI_SS',
+            CONCAT('Baja SS pendiente - ', v_nombre),
+            CONCAT('El contrato de ', v_nombre, ' NO sera renovado.\n',
+                   'Por favor, tramitar la baja en Seguridad Social.\n\n',
+                   'Decision tomada por: ', p_decidido_por)
+        );
+    END IF;
+
+END //
+
+DELIMITER ;
+
+
+-- =============================================================================
+-- SECUENCIA 22: VISTA DASHBOARD VENCIMIENTOS
+-- =============================================================================
+CREATE OR REPLACE VIEW v_dashboard_vencimientos AS
+SELECT
+    'URGENTE' AS prioridad,
+    contrato_id,
+    operador_id,
+    trabajador,
+    tipo_contrato,
+    fecha_fin,
+    dias_restantes,
+    estado_vencimiento,
+    decision_renovacion
+FROM v_contratos_proximos_vencer
+WHERE dias_restantes <= 15
+AND dias_restantes >= 0
+
+UNION ALL
+
+SELECT
+    'PROXIMO' AS prioridad,
+    contrato_id,
+    operador_id,
+    trabajador,
+    tipo_contrato,
+    fecha_fin,
+    dias_restantes,
+    estado_vencimiento,
+    decision_renovacion
+FROM v_contratos_proximos_vencer
+WHERE dias_restantes > 15
+AND dias_restantes <= 30
+
+ORDER BY dias_restantes ASC;
+
+
+-- =============================================================================
 -- FIN DEL SCHEMA
 -- =============================================================================

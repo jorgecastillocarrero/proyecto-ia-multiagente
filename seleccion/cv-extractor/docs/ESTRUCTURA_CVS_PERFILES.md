@@ -2203,5 +2203,198 @@ END;
 
 ---
 
+---
+
+## 19. ALERTAS VENCIMIENTO DE CONTRATOS
+
+### 19.1 Sistema de Alertas por Vencimiento
+
+Cuando un contrato temporal esta proximo a vencer, se genera un sistema de alertas automaticas.
+
+**Ejemplo**:
+- Trabajador: Manuel Manuel
+- Contrato: 3 meses
+- Categoria: T0
+- Horas: 40 h/semana
+- Fecha fin: 28/02/2026
+
+### 19.2 Flujo de Alertas Vencimiento
+
+```
+CONTRATO TEMPORAL
+Fecha fin: 28/02/2026
+         |
+         v
+15 DIAS ANTES (13/02/2026)
+         |
+    +----+----+
+    |         |
+    v         v
+DASHBOARD   ALERTA EMAIL
+Director    Hermi
+RRHH
+         |
+         v
+"Manuel Manuel expira el
+ contrato el dia 28/02/2026"
+         |
+         v
++---------------------------+
+| ALERTAS RECURRENTES       |
+| Cada 2 dias a Hermi       |
+| hasta que se resuelva     |
++---------------------------+
+         |
+    13/02 - Email 1
+    15/02 - Email 2
+    17/02 - Email 3
+    19/02 - Email 4
+    21/02 - Email 5
+    23/02 - Email 6
+    25/02 - Email 7
+    27/02 - Email 8 (ultimo)
+         |
+         v
++---------------------------+
+| SI nuevo contrato firmado |
+| → Se detienen alertas     |
+| → Se marca como RESUELTO  |
++---------------------------+
+```
+
+### 19.3 Dashboards que muestran Vencimientos
+
+| Dashboard | Rol | Muestra |
+|-----------|-----|---------|
+| Director RRHH | DIRECTOR_RRHH | Contratos proximos a vencer |
+| Hermi | HERMI_SS | Contratos pendientes renovar |
+| (Configurable) | Otros roles | Segun configuracion |
+
+### 19.4 Vista Dashboard Vencimientos
+
+```
++============================================================================+
+|  CONTRATOS PROXIMOS A VENCER - Director RRHH                               |
++============================================================================+
+|                                                                             |
+|  [!] VENCEN EN MENOS DE 15 DIAS                                            |
+|  +------------------------------------------+------------+--------+------+ |
+|  | Trabajador        | Tipo    | Fin        | Dias      | Estado | Accion| |
+|  +------------------------------------------+------------+--------+------+ |
+|  | Manuel Manuel     | 3 meses | 28/02/2026 | 10 dias   | [!]    | [Renovar]|
+|  | Carmen Garcia     | 6 meses | 05/03/2026 | 15 dias   | [!]    | [Renovar]|
+|  +------------------------------------------+------------+--------+------+ |
+|                                                                             |
+|  [ ] VENCEN EN 15-30 DIAS                                                  |
+|  +------------------------------------------+------------+--------+------+ |
+|  | Pedro Lopez       | 1 año   | 20/03/2026 | 30 dias   | [ ]    | [Ver]  |
+|  +------------------------------------------+------------+--------+------+ |
+|                                                                             |
++============================================================================+
+```
+
+### 19.5 Alertas Email a Hermi
+
+**Frecuencia**: Cada 2 dias durante los ultimos 15 dias
+
+**Email ejemplo (dia 13/02)**:
+```
+Para: Hermi (Asesor SS)
+Asunto: [URGENTE] Contrato expira - Manuel Manuel - 28/02/2026
+
+Mensaje:
+"El contrato de Manuel Manuel expira el 28/02/2026.
+Quedan 15 dias para la finalizacion.
+
+DATOS DEL TRABAJADOR:
+- Nombre: Manuel Manuel
+- Categoria: T0
+- Horas: 40 h/semana
+- Tipo contrato: Temporal 3 meses
+- Fecha inicio: 01/12/2025
+- Fecha fin: 28/02/2026
+
+ACCIONES PENDIENTES:
+[ ] Decidir renovacion o finalizacion
+[ ] Si renovacion: preparar nuevo contrato
+[ ] Si finalizacion: preparar baja SS
+
+Este email se enviara cada 2 dias hasta que se resuelva.
+
+[Acceder al sistema]"
+```
+
+**Email ejemplo (dia 27/02 - ultimo)**:
+```
+Para: Hermi (Asesor SS)
+Asunto: [MUY URGENTE] Contrato expira MAÑANA - Manuel Manuel - 28/02/2026
+
+Mensaje:
+"ATENCION: El contrato de Manuel Manuel expira MAÑANA 28/02/2026.
+Queda 1 dia para la finalizacion.
+
+Si no se ha tomado una decision, el contrato finalizara automaticamente.
+
+[Acceder al sistema]"
+```
+
+### 19.6 Estados del Contrato por Vencer
+
+| Estado | Descripcion |
+|--------|-------------|
+| ACTIVO | Contrato vigente, sin alertas |
+| PROXIMO_VENCER | Menos de 15 dias, alertas activas |
+| PENDIENTE_DECISION | Alerta enviada, esperando accion |
+| RENOVADO | Nuevo contrato firmado, alertas detenidas |
+| FINALIZADO | Contrato terminado, baja SS tramitada |
+| NO_RENOVADO | Decision de no renovar, baja SS pendiente |
+
+### 19.7 Acciones Posibles
+
+| Accion | Descripcion | Resultado |
+|--------|-------------|-----------|
+| **Renovar** | Crear nuevo contrato | Nuevo flujo de firma, alertas detenidas |
+| **Finalizar** | No renovar contrato | Tramitar baja SS, alertas detenidas |
+| **Modificar** | Cambiar condiciones | Nuevo contrato con cambios |
+
+### 19.8 Condiciones que generan Alertas
+
+Si se modifican estas condiciones en el contrato activo:
+
+| Condicion | Alerta |
+|-----------|--------|
+| Fecha fin proxima (< 15 dias) | Alerta vencimiento |
+| Cambio de categoria | Alerta modificacion |
+| Cambio de horas | Alerta modificacion |
+| Cambio de tipo contrato | Alerta modificacion |
+
+---
+
+## 20. CONFIGURACION ALERTAS POR ROL
+
+### 20.1 Tabla Configuracion Alertas
+
+| Rol | Tipo Alerta | Canal | Frecuencia |
+|-----|-------------|-------|------------|
+| DIRECTOR_RRHH | Vencimiento contrato | Dashboard | Tiempo real |
+| DIRECTOR_RRHH | Nuevo contratado | Dashboard + Email | Inmediata |
+| HERMI_SS | Vencimiento contrato | Email | Cada 2 dias |
+| HERMI_SS | Pendiente alta | Email | Inmediata |
+| HERMI_SS | Datos completos | Email | Inmediata |
+| TRABAJADOR | Firma contrato | Email | Inmediata |
+| TRABAJADOR | Documentos pendientes | Email | Semanal |
+
+### 20.2 Canales de Notificacion
+
+| Canal | Descripcion |
+|-------|-------------|
+| Dashboard | Aparece en el panel del usuario |
+| Email | Correo electronico |
+| SMS | Mensaje de texto (opcional) |
+| Llamada | Llamada telefonica (opcional) |
+
+---
+
 *Documento generado: 2026-02-17*
+*Ultima actualizacion: 2026-02-18*
 *Ultima actualizacion: 2026-02-18*
