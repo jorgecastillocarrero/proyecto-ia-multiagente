@@ -54,7 +54,7 @@ def get_peticiones_abiertas():
                     estado
                 FROM peticiones_trabajador
                 WHERE estado IN ('ABIERTA', 'EN_PROCESO')
-                ORDER BY fecha_solicitud DESC
+                ORDER BY id ASC
             """)
             return cursor.fetchall()
     finally:

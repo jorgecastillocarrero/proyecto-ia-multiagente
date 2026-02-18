@@ -399,6 +399,8 @@ DELIMITER ;
 
 Se genera automaticamente cada **lunes a las 05:00** (hora España) y se envia a las personas asignadas.
 
+#### Semana Actual: 17/02/2026 - 23/02/2026
+
 #### Contenido del Reporte
 
 **1. Necesidades de Personal**
@@ -430,6 +432,58 @@ python reporte_semanal.py
 # Añadir a crontab para ejecucion automatica
 # Lunes a las 05:00 hora España
 0 5 * * 1 cd /ruta/cv-extractor && python reporte_semanal.py
+```
+
+### 0.15 Ubicacion de Datos - Donde esta guardado cada cosa
+
+#### Base de Datos
+
+| Tabla | Ubicacion | Descripcion |
+|-------|-----------|-------------|
+| `perfiles` | BD: 192.168.1.133 | Perfiles + ofertas de empleo |
+| `peticiones_trabajador` | BD: 192.168.1.133 | Peticiones de personal |
+| `alertas_peticion` | BD: 192.168.1.133 | Alertas automaticas |
+
+#### Archivos
+
+| Archivo | Ruta | Descripcion |
+|---------|------|-------------|
+| Schema SQL | `sql/schema_mysql.sql` | Tablas, datos, procedimientos |
+| Script PDF | `reporte_semanal.py` | Genera reporte semanal |
+| Documentacion | `docs/ESTRUCTURA_CVS_PERFILES.md` | Este documento |
+| PDFs generados | `reportes/reporte_semanal_*.pdf` | Reportes semanales |
+
+#### Datos Actuales en BD (peticiones_trabajador)
+
+| ID | Perfil | Posicion | Solicitante | Fecha Solicitud | Publicado | Desde | Hasta | Estado |
+|----|--------|----------|-------------|-----------------|-----------|-------|-------|--------|
+| 1 | LOGISTICA | Operario/a Logística | Gerente | 15/01/2026 | InfoJobs | 27/01/2026 | 28/03/2026 | ABIERTA |
+| 2 | PESCADERIA | Dependiente/a Pescadería | Gerente | 13/02/2026 | InfoJobs | 13/02/2026 | 14/04/2026 | ABIERTA |
+| 3 | BECARIO | Becario Administración | Gerente | 01/02/2026 | - | - | - | ABIERTA |
+
+#### Datos Actuales en BD (perfiles)
+
+| Codigo | Nombre | Oferta Titulo | Tiene Oferta Completa |
+|--------|--------|---------------|----------------------|
+| PESCADERIA | Pescaderia | Dependiente/a de Pescaderia | SI |
+| LOGISTICA | Logistica | Operario/a de Logistica de Almacen | SI |
+| PRODUCCION | Produccion | Operario/a de Produccion | NO (generica) |
+| ADMINISTRATIVO | Administrativo | Administrativo/a | NO (generica) |
+| GESTION | Gestion | Responsable de Area | NO (generica) |
+| BECARIO | Becario | Becario/a en Practicas | NO (generica) |
+
+#### SQL para insertar datos
+
+```sql
+-- Ejecutar en BD 192.168.1.133
+
+-- 1. Peticiones de trabajador
+INSERT INTO peticiones_trabajador
+(perfil_codigo, posicion, solicitante_rol, solicitante_nombre, fecha_solicitud, publicado_en, fecha_publicacion_desde, fecha_publicacion_hasta, estado)
+VALUES
+('LOGISTICA', 'Operario/a Logística', 'GERENTE', 'Gerente', '2026-01-15', 'InfoJobs', '2026-01-27', '2026-03-28', 'ABIERTA'),
+('PESCADERIA', 'Dependiente/a Pescadería', 'GERENTE', 'Gerente', '2026-02-13', 'InfoJobs', '2026-02-13', '2026-04-14', 'ABIERTA'),
+('BECARIO', 'Becario Administración', 'GERENTE', 'Gerente', '2026-02-01', NULL, NULL, NULL, 'ABIERTA');
 ```
 
 ---
