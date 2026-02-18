@@ -1768,25 +1768,34 @@ ORDER BY dias_restantes ASC;
 -- =============================================================================
 -- SECUENCIA 23: HISTORIAL DE CONTRATOS (lineas)
 -- Cada modificacion genera nueva linea
+-- Formato: # | Contrato Desde | Contrato Hasta | Cat | Horas | Codigo | Tipo | Sustit | Validez Desde | Validez Hasta | Acciones
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS contratos_historial (
     id INT AUTO_INCREMENT PRIMARY KEY,
     operador_id INT NOT NULL,
-    numero_linea INT NOT NULL COMMENT 'Numero secuencial de linea para este trabajador',
+    numero_linea INT NOT NULL COMMENT 'Numero secuencial de linea (#)',
 
-    -- Condiciones del contrato
-    tipo_contrato VARCHAR(100),
-    codigo_contrato VARCHAR(50),
+    -- Fechas del contrato "padre"
+    contrato_desde DATE NOT NULL COMMENT 'Fecha inicio del contrato original',
+    contrato_hasta DATE COMMENT 'Fecha fin del contrato (NULL si indefinido)',
+
+    -- Condiciones de esta linea
+    categoria_codigo VARCHAR(10) COMMENT 'Cat: T0, T1, etc.',
     categoria_profesional_id INT,
-    horas_semana INT,
-    fecha_desde DATE NOT NULL,
-    fecha_hasta DATE COMMENT 'NULL si indefinido o activo',
+    horas_semana INT COMMENT 'Horas',
+    codigo_contrato VARCHAR(50) COMMENT 'Codigo: 100, 200, etc.',
+    tipo_contrato VARCHAR(100) COMMENT 'Tipo: Temporal 3m, Indefinido, etc.',
+    es_sustitucion TINYINT(1) DEFAULT 0 COMMENT 'Sustit: SI/NO',
+
+    -- Validez de esta linea especifica
+    validez_desde DATE NOT NULL COMMENT 'Desde cuando aplica esta linea',
+    validez_hasta DATE COMMENT 'Hasta cuando aplica (NULL si activa)',
 
     -- Estado de la linea
     estado ENUM('ACTIVO', 'CERRADO', 'PENDIENTE_FIRMA') DEFAULT 'PENDIENTE_FIRMA',
 
     -- Motivo del cambio (si es linea posterior a la primera)
-    motivo_cambio ENUM('NUEVO_CONTRATO', 'CAMBIO_CATEGORIA', 'CAMBIO_JORNADA', 'CAMBIO_AMBOS', 'RENOVACION') DEFAULT 'NUEVO_CONTRATO',
+    motivo_cambio ENUM('NUEVO_CONTRATO', 'CAMBIO_CATEGORIA', 'CAMBIO_JORNADA', 'CAMBIO_AMBOS', 'RENOVACION', 'TRANSFORMACION') DEFAULT 'NUEVO_CONTRATO',
     descripcion_cambio TEXT,
 
     -- Documento anexo
@@ -1794,11 +1803,12 @@ CREATE TABLE IF NOT EXISTS contratos_historial (
     documento_subido_por VARCHAR(100) COMMENT 'Hermi',
     fecha_subida_documento DATETIME,
 
-    -- Firmas
-    firmado_empresa TINYINT(1) DEFAULT 0,
-    fecha_firma_empresa DATETIME,
-    firmado_por_empresa VARCHAR(100),
-    firmado_trabajador TINYINT(1) DEFAULT 0,
+    -- Firmas (H = Hermi, Dir = Director RRHH, T = Trabajador)
+    firmado_hermi TINYINT(1) DEFAULT 0 COMMENT 'H: Hermi subio documento',
+    fecha_firma_hermi DATETIME,
+    firmado_director TINYINT(1) DEFAULT 0 COMMENT 'Dir: Director RRHH firmo',
+    fecha_firma_director DATETIME,
+    firmado_trabajador TINYINT(1) DEFAULT 0 COMMENT 'T: Trabajador firmo',
     fecha_firma_trabajador DATETIME,
 
     -- Referencia a linea anterior (si es modificacion)
@@ -1808,7 +1818,7 @@ CREATE TABLE IF NOT EXISTS contratos_historial (
 
     INDEX idx_operador (operador_id),
     INDEX idx_estado (estado),
-    INDEX idx_fecha (fecha_desde),
+    INDEX idx_validez (validez_desde),
     UNIQUE KEY uk_operador_linea (operador_id, numero_linea)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -1855,52 +1865,65 @@ CREATE TABLE IF NOT EXISTS alertas_modificacion_contrato (
 -- =============================================================================
 -- SECUENCIA 25: PROCEDIMIENTO - Modificar condiciones contrato
 -- Genera nueva linea y alertas
+-- Campos: contrato_desde/hasta (contrato padre), validez_desde/hasta (esta linea)
 -- =============================================================================
 DELIMITER //
 
 CREATE PROCEDURE IF NOT EXISTS sp_modificar_condiciones_contrato(
     IN p_operador_id INT,
-    IN p_nueva_categoria INT,
+    IN p_nueva_categoria_codigo VARCHAR(10),
+    IN p_nueva_categoria_id INT,
     IN p_nuevas_horas INT,
-    IN p_fecha_desde DATE,
+    IN p_validez_desde DATE,
     IN p_modificado_por VARCHAR(100)
 )
 BEGIN
     DECLARE v_nombre VARCHAR(100);
     DECLARE v_email VARCHAR(255);
-    DECLARE v_categoria_anterior INT;
+    DECLARE v_categoria_anterior VARCHAR(10);
     DECLARE v_horas_anterior INT;
     DECLARE v_nueva_linea INT;
     DECLARE v_linea_anterior_id INT;
     DECLARE v_campo_modificado VARCHAR(20);
     DECLARE v_nuevo_contrato_id INT;
+    DECLARE v_contrato_desde DATE;
+    DECLARE v_contrato_hasta DATE;
+    DECLARE v_codigo_contrato VARCHAR(50);
+    DECLARE v_tipo_contrato VARCHAR(100);
+    DECLARE v_es_sustitucion TINYINT;
 
-    -- Obtener datos actuales
+    -- Obtener datos actuales del contrato activo
     SELECT
         CONCAT(o.Nombre, ' ', o.Apellido1),
         o.email,
-        ch.categoria_profesional_id,
+        ch.categoria_codigo,
         ch.horas_semana,
-        ch.id
-    INTO v_nombre, v_email, v_categoria_anterior, v_horas_anterior, v_linea_anterior_id
+        ch.id,
+        ch.contrato_desde,
+        ch.contrato_hasta,
+        ch.codigo_contrato,
+        ch.tipo_contrato,
+        ch.es_sustitucion
+    INTO v_nombre, v_email, v_categoria_anterior, v_horas_anterior, v_linea_anterior_id,
+         v_contrato_desde, v_contrato_hasta, v_codigo_contrato, v_tipo_contrato, v_es_sustitucion
     FROM operadores o
     LEFT JOIN contratos_historial ch ON o.id = ch.operador_id AND ch.estado = 'ACTIVO'
     WHERE o.id = p_operador_id
     LIMIT 1;
 
     -- Determinar que campo se modifico
-    IF p_nueva_categoria != v_categoria_anterior AND p_nuevas_horas != v_horas_anterior THEN
+    IF p_nueva_categoria_codigo != v_categoria_anterior AND p_nuevas_horas != v_horas_anterior THEN
         SET v_campo_modificado = 'AMBOS';
-    ELSEIF p_nueva_categoria != v_categoria_anterior THEN
+    ELSEIF p_nueva_categoria_codigo != v_categoria_anterior THEN
         SET v_campo_modificado = 'CATEGORIA';
     ELSE
         SET v_campo_modificado = 'JORNADA';
     END IF;
 
-    -- Cerrar linea anterior
+    -- Cerrar linea anterior (actualizar validez_hasta)
     UPDATE contratos_historial
     SET estado = 'CERRADO',
-        fecha_hasta = DATE_SUB(p_fecha_desde, INTERVAL 1 DAY)
+        validez_hasta = DATE_SUB(p_validez_desde, INTERVAL 1 DAY)
     WHERE operador_id = p_operador_id AND estado = 'ACTIVO';
 
     -- Obtener numero de nueva linea
@@ -1909,26 +1932,34 @@ BEGIN
     FROM contratos_historial
     WHERE operador_id = p_operador_id;
 
-    -- Crear nueva linea
+    -- Crear nueva linea (mantiene contrato_desde/hasta, cambia validez_desde)
     INSERT INTO contratos_historial (
-        operador_id, numero_linea, categoria_profesional_id, horas_semana,
-        fecha_desde, estado, motivo_cambio, descripcion_cambio, linea_anterior_id
+        operador_id, numero_linea,
+        contrato_desde, contrato_hasta,
+        categoria_codigo, categoria_profesional_id, horas_semana,
+        codigo_contrato, tipo_contrato, es_sustitucion,
+        validez_desde, validez_hasta,
+        estado, motivo_cambio, descripcion_cambio, linea_anterior_id
     ) VALUES (
-        p_operador_id, v_nueva_linea, p_nueva_categoria, p_nuevas_horas,
-        p_fecha_desde, 'PENDIENTE_FIRMA',
+        p_operador_id, v_nueva_linea,
+        v_contrato_desde, v_contrato_hasta,
+        p_nueva_categoria_codigo, p_nueva_categoria_id, p_nuevas_horas,
+        v_codigo_contrato, v_tipo_contrato, v_es_sustitucion,
+        p_validez_desde, NULL,
+        'PENDIENTE_FIRMA',
         CASE v_campo_modificado
             WHEN 'AMBOS' THEN 'CAMBIO_AMBOS'
             WHEN 'CATEGORIA' THEN 'CAMBIO_CATEGORIA'
             ELSE 'CAMBIO_JORNADA'
         END,
-        CONCAT('Categoria: ', COALESCE(v_categoria_anterior, 'N/A'), ' → ', p_nueva_categoria,
-               ' | Horas: ', COALESCE(v_horas_anterior, 'N/A'), ' → ', p_nuevas_horas),
+        CONCAT('Categoria: ', COALESCE(v_categoria_anterior, 'N/A'), ' -> ', p_nueva_categoria_codigo,
+               ' | Horas: ', COALESCE(v_horas_anterior, 'N/A'), ' -> ', p_nuevas_horas),
         v_linea_anterior_id
     );
 
     SET v_nuevo_contrato_id = LAST_INSERT_ID();
 
-    -- ALERTA 1: Hermi - Subir documento
+    -- ALERTA 1: Hermi - Subir documento (estado: □H □Dir □T)
     INSERT INTO alertas_modificacion_contrato (
         operador_id, contrato_historial_id, tipo_alerta, destinatario_rol,
         campo_modificado, valor_anterior, valor_nuevo, asunto, mensaje
@@ -1942,17 +1973,17 @@ BEGIN
             ELSE CONCAT(v_categoria_anterior, '/', v_horas_anterior)
         END,
         CASE v_campo_modificado
-            WHEN 'CATEGORIA' THEN p_nueva_categoria
+            WHEN 'CATEGORIA' THEN p_nueva_categoria_codigo
             WHEN 'JORNADA' THEN p_nuevas_horas
-            ELSE CONCAT(p_nueva_categoria, '/', p_nuevas_horas)
+            ELSE CONCAT(p_nueva_categoria_codigo, '/', p_nuevas_horas)
         END,
         CONCAT('Modificacion condiciones - ', v_nombre),
         CONCAT('Se ha modificado las condiciones del contrato de ', v_nombre, '.\n\n',
                'CAMBIOS:\n',
                CASE
-                   WHEN v_campo_modificado = 'CATEGORIA' THEN CONCAT('- Categoria: ', v_categoria_anterior, ' → ', p_nueva_categoria)
-                   WHEN v_campo_modificado = 'JORNADA' THEN CONCAT('- Jornada: ', v_horas_anterior, 'h → ', p_nuevas_horas, 'h')
-                   ELSE CONCAT('- Categoria: ', v_categoria_anterior, ' → ', p_nueva_categoria, '\n- Jornada: ', v_horas_anterior, 'h → ', p_nuevas_horas, 'h')
+                   WHEN v_campo_modificado = 'CATEGORIA' THEN CONCAT('- Categoria: ', v_categoria_anterior, ' -> ', p_nueva_categoria_codigo)
+                   WHEN v_campo_modificado = 'JORNADA' THEN CONCAT('- Jornada: ', v_horas_anterior, 'h -> ', p_nuevas_horas, 'h')
+                   ELSE CONCAT('- Categoria: ', v_categoria_anterior, ' -> ', p_nueva_categoria_codigo, '\n- Jornada: ', v_horas_anterior, 'h -> ', p_nuevas_horas, 'h')
                END,
                '\n\nACCIONES:\n[ ] Preparar anexo de modificacion\n[ ] Subir documento al sistema')
     );
@@ -1964,6 +1995,7 @@ DELIMITER ;
 
 -- =============================================================================
 -- SECUENCIA 26: PROCEDIMIENTO - Hermi sube documento anexo
+-- Estado: □H -> ✓H (firmado_hermi = 1)
 -- =============================================================================
 DELIMITER //
 
@@ -1977,11 +2009,13 @@ BEGIN
     DECLARE v_nombre VARCHAR(100);
     DECLARE v_cambio TEXT;
 
-    -- Actualizar contrato
+    -- Actualizar contrato - Hermi sube documento (✓H)
     UPDATE contratos_historial
     SET documento_url = p_documento_url,
         documento_subido_por = p_subido_por,
-        fecha_subida_documento = NOW()
+        fecha_subida_documento = NOW(),
+        firmado_hermi = 1,
+        fecha_firma_hermi = NOW()
     WHERE id = p_contrato_historial_id;
 
     -- Obtener datos
@@ -2021,6 +2055,7 @@ DELIMITER ;
 
 -- =============================================================================
 -- SECUENCIA 27: PROCEDIMIENTO - Director firma anexo
+-- Estado: ✓H □Dir -> ✓H ✓Dir (firmado_director = 1)
 -- =============================================================================
 DELIMITER //
 
@@ -2034,11 +2069,10 @@ BEGIN
     DECLARE v_email VARCHAR(255);
     DECLARE v_cambio TEXT;
 
-    -- Actualizar contrato
+    -- Actualizar contrato - Director firma (✓Dir)
     UPDATE contratos_historial
-    SET firmado_empresa = 1,
-        fecha_firma_empresa = NOW(),
-        firmado_por_empresa = p_firmado_por
+    SET firmado_director = 1,
+        fecha_firma_director = NOW()
     WHERE id = p_contrato_historial_id;
 
     -- Obtener datos
@@ -2054,7 +2088,7 @@ BEGIN
     WHERE contrato_historial_id = p_contrato_historial_id
     AND tipo_alerta = 'DIRECTOR_FIRMAR_ANEXO';
 
-    -- ALERTA 3: Trabajador - Firmar anexo
+    -- ALERTA 3: Trabajador - Firmar anexo (desbloquear)
     INSERT INTO alertas_modificacion_contrato (
         operador_id, contrato_historial_id, tipo_alerta, destinatario_rol,
         destinatario_email, campo_modificado, asunto, mensaje
@@ -2079,6 +2113,7 @@ DELIMITER ;
 
 -- =============================================================================
 -- SECUENCIA 28: PROCEDIMIENTO - Trabajador firma anexo
+-- Estado: ✓H ✓Dir □T -> ✓H ✓Dir ✓T (firmado_trabajador = 1, estado = ACTIVO)
 -- =============================================================================
 DELIMITER //
 
@@ -2090,7 +2125,7 @@ BEGIN
     DECLARE v_nombre VARCHAR(100);
     DECLARE v_cambio TEXT;
 
-    -- Actualizar contrato
+    -- Actualizar contrato - Trabajador firma (✓T) -> ACTIVO
     UPDATE contratos_historial
     SET firmado_trabajador = 1,
         fecha_firma_trabajador = NOW(),
@@ -2147,23 +2182,126 @@ DELIMITER ;
 
 
 -- =============================================================================
+-- SECUENCIA 28B: PROCEDIMIENTO - Transformar contrato (ej: temporal a indefinido)
+-- Crea NUEVO contrato con nuevas fechas contrato_desde/hasta
+-- =============================================================================
+DELIMITER //
+
+CREATE PROCEDURE IF NOT EXISTS sp_transformar_contrato(
+    IN p_operador_id INT,
+    IN p_nueva_categoria_codigo VARCHAR(10),
+    IN p_nueva_categoria_id INT,
+    IN p_nuevas_horas INT,
+    IN p_nuevo_codigo_contrato VARCHAR(50),
+    IN p_nuevo_tipo_contrato VARCHAR(100),
+    IN p_contrato_desde DATE,
+    IN p_contrato_hasta DATE,
+    IN p_es_sustitucion TINYINT,
+    IN p_modificado_por VARCHAR(100)
+)
+BEGIN
+    DECLARE v_nombre VARCHAR(100);
+    DECLARE v_email VARCHAR(255);
+    DECLARE v_nueva_linea INT;
+    DECLARE v_linea_anterior_id INT;
+    DECLARE v_nuevo_contrato_id INT;
+    DECLARE v_contrato_anterior_hasta DATE;
+
+    -- Obtener datos actuales
+    SELECT
+        CONCAT(o.Nombre, ' ', o.Apellido1),
+        o.email,
+        ch.id,
+        ch.contrato_hasta
+    INTO v_nombre, v_email, v_linea_anterior_id, v_contrato_anterior_hasta
+    FROM operadores o
+    LEFT JOIN contratos_historial ch ON o.id = ch.operador_id AND ch.estado = 'ACTIVO'
+    WHERE o.id = p_operador_id
+    LIMIT 1;
+
+    -- Cerrar linea anterior (actualizar validez_hasta al dia antes del nuevo contrato)
+    UPDATE contratos_historial
+    SET estado = 'CERRADO',
+        validez_hasta = DATE_SUB(p_contrato_desde, INTERVAL 1 DAY)
+    WHERE operador_id = p_operador_id AND estado = 'ACTIVO';
+
+    -- Obtener numero de nueva linea
+    SELECT COALESCE(MAX(numero_linea), 0) + 1
+    INTO v_nueva_linea
+    FROM contratos_historial
+    WHERE operador_id = p_operador_id;
+
+    -- Crear nueva linea con NUEVO contrato (contrato_desde/hasta cambian)
+    INSERT INTO contratos_historial (
+        operador_id, numero_linea,
+        contrato_desde, contrato_hasta,
+        categoria_codigo, categoria_profesional_id, horas_semana,
+        codigo_contrato, tipo_contrato, es_sustitucion,
+        validez_desde, validez_hasta,
+        estado, motivo_cambio, descripcion_cambio, linea_anterior_id
+    ) VALUES (
+        p_operador_id, v_nueva_linea,
+        p_contrato_desde, p_contrato_hasta,
+        p_nueva_categoria_codigo, p_nueva_categoria_id, p_nuevas_horas,
+        p_nuevo_codigo_contrato, p_nuevo_tipo_contrato, p_es_sustitucion,
+        p_contrato_desde, NULL,
+        'PENDIENTE_FIRMA',
+        'TRANSFORMACION',
+        CONCAT('Transformacion de contrato: ', p_nuevo_tipo_contrato, ' desde ', DATE_FORMAT(p_contrato_desde, '%d/%m/%Y')),
+        v_linea_anterior_id
+    );
+
+    SET v_nuevo_contrato_id = LAST_INSERT_ID();
+
+    -- ALERTA: Hermi - Subir documento del nuevo contrato
+    INSERT INTO alertas_modificacion_contrato (
+        operador_id, contrato_historial_id, tipo_alerta, destinatario_rol,
+        campo_modificado, asunto, mensaje
+    ) VALUES (
+        p_operador_id, v_nuevo_contrato_id,
+        'HERMI_SUBIR_DOCUMENTO', 'HERMI_SS',
+        'AMBOS',
+        CONCAT('Nuevo contrato - ', v_nombre),
+        CONCAT('Se ha transformado el contrato de ', v_nombre, '.\n\n',
+               'NUEVO CONTRATO:\n',
+               '- Tipo: ', p_nuevo_tipo_contrato, '\n',
+               '- Codigo: ', p_nuevo_codigo_contrato, '\n',
+               '- Desde: ', DATE_FORMAT(p_contrato_desde, '%d/%m/%Y'), '\n',
+               '- Hasta: ', COALESCE(DATE_FORMAT(p_contrato_hasta, '%d/%m/%Y'), 'Indefinido'), '\n\n',
+               'ACCIONES:\n[ ] Preparar contrato\n[ ] Subir documento al sistema')
+    );
+
+END //
+
+DELIMITER ;
+
+
+-- =============================================================================
 -- SECUENCIA 29: VISTA HISTORIAL CONTRATOS TRABAJADOR
+-- Formato: # | Contrato Desde | Contrato Hasta | Cat | Horas | Codigo | Tipo | Sustit | Validez Desde | Validez Hasta | Acciones
 -- =============================================================================
 CREATE OR REPLACE VIEW v_historial_contratos AS
 SELECT
     ch.operador_id,
     CONCAT(o.Nombre, ' ', o.Apellido1) AS trabajador,
-    ch.numero_linea,
-    ch.tipo_contrato,
-    ch.categoria_profesional_id AS categoria,
-    ch.horas_semana AS horas,
-    ch.fecha_desde,
-    ch.fecha_hasta,
+    ch.numero_linea AS `#`,
+    DATE_FORMAT(ch.contrato_desde, '%d/%m/%Y') AS `Contrato Desde`,
+    COALESCE(DATE_FORMAT(ch.contrato_hasta, '%d/%m/%Y'), '-') AS `Contrato Hasta`,
+    ch.categoria_codigo AS `Cat`,
+    ch.horas_semana AS `Horas`,
+    ch.codigo_contrato AS `Codigo`,
+    ch.tipo_contrato AS `Tipo`,
+    IF(ch.es_sustitucion = 1, 'SI', 'NO') AS `Sustit`,
+    DATE_FORMAT(ch.validez_desde, '%d/%m/%Y') AS `Validez Desde`,
+    COALESCE(DATE_FORMAT(ch.validez_hasta, '%d/%m/%Y'), '-') AS `Validez Hasta`,
+    CONCAT(
+        IF(ch.firmado_hermi = 1, '✓H ', '□H '),
+        IF(ch.firmado_director = 1, '✓Dir ', '□Dir '),
+        IF(ch.firmado_trabajador = 1, '✓T', '□T')
+    ) AS `Acciones`,
     ch.estado,
     ch.motivo_cambio,
-    ch.descripcion_cambio,
-    ch.firmado_empresa,
-    ch.firmado_trabajador
+    ch.descripcion_cambio
 FROM contratos_historial ch
 JOIN operadores o ON ch.operador_id = o.id
 ORDER BY ch.operador_id, ch.numero_linea;

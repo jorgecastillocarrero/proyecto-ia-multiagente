@@ -2607,6 +2607,85 @@ CAMBIOS:
 
 ---
 
+## 22. HISTORIAL DE CONTRATOS - FORMATO VISUAL FINAL
+
+### 22.1 Estructura de Columnas
+
+| Columna | Descripcion | Tipo BD |
+|---------|-------------|---------|
+| # | Numero de linea secuencial | INT |
+| Contrato Desde | Fecha inicio del contrato original | DATE |
+| Contrato Hasta | Fecha fin del contrato (- si indefinido) | DATE NULL |
+| Cat | Categoria profesional (T0, T1, etc.) | VARCHAR |
+| Horas | Horas semanales | INT |
+| Codigo | Codigo de contrato | VARCHAR |
+| Tipo | Tipo de contrato (Temporal 3m, Indefinido, etc.) | VARCHAR |
+| Sustit | Si es sustitucion (SI/NO) | TINYINT |
+| Validez Desde | Fecha desde que aplica esta linea | DATE |
+| Validez Hasta | Fecha hasta que aplica esta linea | DATE NULL |
+| Acciones | Estado de firmas | VARCHAR |
+
+### 22.2 Formato Visual Historial
+
+```
+┌─────┬────────────────┬────────────────┬─────┬───────┬────────┬─────────────┬────────┬───────────────┬───────────────┬────────────┐
+│  #  │ Contrato Desde │ Contrato Hasta │ Cat │ Horas │ Codigo │    Tipo     │ Sustit │ Validez Desde │ Validez Hasta │  Acciones  │
+├─────┼────────────────┼────────────────┼─────┼───────┼────────┼─────────────┼────────┼───────────────┼───────────────┼────────────┤
+│ 1   │ 01/12/2025     │ 28/02/2026     │ T0  │ 40    │ 100    │ Temporal 3m │ NO     │ 01/12/2025    │ 02/02/2026    │ ✓H ✓Dir ✓T │
+├─────┼────────────────┼────────────────┼─────┼───────┼────────┼─────────────┼────────┼───────────────┼───────────────┼────────────┤
+│ 2   │ 01/12/2025     │ 28/02/2026     │ T1  │ 40    │ 100    │ Temporal 3m │ NO     │ 03/02/2026    │ 09/02/2026    │ ✓H ✓Dir ✓T │
+├─────┼────────────────┼────────────────┼─────┼───────┼────────┼─────────────┼────────┼───────────────┼───────────────┼────────────┤
+│ 3   │ 01/12/2025     │ 28/02/2026     │ T1  │ 20    │ 100    │ Temporal 3m │ NO     │ 10/02/2026    │ 28/02/2026    │ ✓H ✓Dir ✓T │
+├─────┼────────────────┼────────────────┼─────┼───────┼────────┼─────────────┼────────┼───────────────┼───────────────┼────────────┤
+│ 4   │ 01/03/2026     │ -              │ T1  │ 20    │ 200    │ Indefinido  │ NO     │ 01/03/2026    │ 14/03/2026    │ ✓H ✓Dir ✓T │
+├─────┼────────────────┼────────────────┼─────┼───────┼────────┼─────────────┼────────┼───────────────┼───────────────┼────────────┤
+│ 5   │ 01/03/2026     │ -              │ T1  │ 40    │ 200    │ Indefinido  │ NO     │ 15/03/2026    │ -             │ □H □Dir □T │
+└─────┴────────────────┴────────────────┴─────┴───────┴────────┴─────────────┴────────┴───────────────┴───────────────┴────────────┘
+```
+
+### 22.3 Explicacion del Ejemplo
+
+| Linea | Descripcion del cambio |
+|-------|------------------------|
+| 1 | Contrato original: Temporal 3 meses, categoria T0, 40 horas |
+| 2 | Cambio de categoria: T0 → T1 (validez desde 03/02/2026) |
+| 3 | Cambio de horas: 40h → 20h (validez desde 10/02/2026) |
+| 4 | Transformacion a Indefinido: nuevo contrato desde 01/03/2026 |
+| 5 | Cambio de horas: 20h → 40h (pendiente de firmas) |
+
+### 22.4 Estados de Acciones
+
+| Icono | Significado |
+|-------|-------------|
+| ✓H | Hermi ha subido el documento |
+| ✓Dir | Director RRHH ha firmado |
+| ✓T | Trabajador ha firmado |
+| □H | Pendiente subir documento (Hermi) |
+| □Dir | Pendiente firma Director RRHH |
+| □T | Pendiente firma Trabajador |
+
+### 22.5 Diferencia entre Contrato y Validez
+
+| Campo | Descripcion |
+|-------|-------------|
+| **Contrato Desde/Hasta** | Fechas del contrato "padre" (el original firmado) |
+| **Validez Desde/Hasta** | Fechas en que aplican las condiciones de ESA linea |
+
+**Ejemplo**:
+- Un trabajador firma un contrato temporal de 3 meses (01/12/2025 - 28/02/2026)
+- Si le cambian la categoria el 03/02/2026, se crea una nueva linea
+- El "Contrato" sigue siendo el mismo (01/12/2025 - 28/02/2026)
+- Pero la "Validez" de la linea 1 termina el 02/02/2026
+- Y la "Validez" de la linea 2 empieza el 03/02/2026
+
+### 22.6 Cuando cambia "Contrato Desde/Hasta"
+
+Solo cambia cuando hay un **nuevo contrato** (no modificacion):
+- Transformacion de temporal a indefinido
+- Finalizacion y nuevo contrato
+- Renovacion con nuevas fechas
+
+---
+
 *Documento generado: 2026-02-17*
-*Ultima actualizacion: 2026-02-18*
 *Ultima actualizacion: 2026-02-18*
