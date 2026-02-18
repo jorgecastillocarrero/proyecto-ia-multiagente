@@ -24,22 +24,110 @@ CREATE TABLE IF NOT EXISTS perfiles (
     descripcion TEXT COMMENT 'Descripcion del perfil',
     keywords TEXT COMMENT 'Palabras clave separadas por coma para clasificacion',
     activo TINYINT(1) DEFAULT 1 COMMENT '1=Activo, 0=Inactivo',
+
+    -- Oferta de empleo (plantilla)
+    oferta_titulo VARCHAR(200) COMMENT 'Titulo de la oferta en InfoJobs',
+    oferta_descripcion TEXT COMMENT 'Descripcion del puesto',
+    oferta_requisitos TEXT COMMENT 'Requisitos del candidato',
+    oferta_condiciones TEXT COMMENT 'Condiciones laborales ofrecidas',
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Datos iniciales de perfiles
-INSERT INTO perfiles (codigo, nombre, descripcion, keywords) VALUES
+-- Datos iniciales de perfiles (con oferta de empleo)
+INSERT INTO perfiles (codigo, nombre, descripcion, keywords, oferta_titulo, oferta_descripcion, oferta_requisitos, oferta_condiciones) VALUES
 ('PESCADERIA', 'Pescaderia', 'Pescaderia, carniceria, comercio, dependiente de tienda',
- 'pescad,carnicer,charcuter,corte,filete,marisco,mostrador,fresco,despiece,dependient,tienda,comercio'),
+ 'pescad,carnicer,charcuter,corte,filete,marisco,mostrador,fresco,despiece,dependient,tienda,comercio',
+ 'Dependiente/a de Pescaderia',
+ 'Nos encontramos en la busqueda de Dependientes/as de Pescaderia que se encarguen de la venta, preparacion y manipulacion de una amplia variedad de productos del mar en una pescaderia de referencia.
+
+RESPONSABILIDADES Y FUNCIONES:
+- Atencion al cliente y asesoramiento sobre la seleccion y preparacion de los productos del mar
+- Manipulacion y corte de pescado y mariscos, aplicando tecnicas de carniceria y manipulacion de cuchillo
+- Ordenamiento, rotacion y almacenamiento de existencias en la seccion de pescaderia
+- Recepcion y verificacion de la mercancia en el obrador
+- Colaboracion en la preparacion y presentacion de los productos
+- Mantenimiento de la limpieza y orden del area de trabajo',
+ 'REQUISITOS:
+- Experiencia previa en el sector de industria alimentaria, preferiblemente en pescaderia o venta al detalle de alimentos
+- Dominio de las tecnicas de pescado, manipulacion de cuchillo, carniceria y almacenamiento de existencias
+- Habilidades de atencion al cliente y venta al detalle de alimentos
+- Compromiso con la calidad, la higiene y la seguridad en el manejo de los productos alimentarios
+- Flexibilidad para adaptarse a los horarios y las necesidades del establecimiento',
+ 'SE OFRECE:
+- Oportunidad de formar parte de un equipo comprometido y en constante crecimiento
+- Desarrollo de habilidades profesionales
+- Posibilidad de contribuir al exito de nuestra pescaderia'),
+
 ('LOGISTICA', 'Logistica', 'Logistica, almacen, reparto, transporte',
- 'logistic,almacen,reparto,repartidor,transporte,carretiller,mozo,carga,descarga,picking,conductor,camion,furgoneta'),
+ 'logistic,almacen,reparto,repartidor,transporte,carretiller,mozo,carga,descarga,picking,conductor,camion,furgoneta',
+ 'Operario/a de Logistica de Almacen',
+ 'EMPRESA DEL SECTOR DE PESCADOS Y MARISCOS, UBICADA EN MERCACORDOBA, BUSCA INCORPORAR UNA PERSONA PARA JORNADA COMPLETA.
+
+FUNCIONES PRINCIPALES:
+- Descarga y recepcion de mercancia
+- Preparacion de pedidos
+- Almacenaje y organizacion de productos
+- Carga de mercancia para clientes
+
+OTRAS FUNCIONES:
+- Limpieza y orden del area de trabajo
+- Transporte interno de mercancia
+- Apoyo en corte y fileteado cuando sea necesario',
+ 'REQUISITOS IMPRESCINDIBLES:
+- Carnet y manejo de carretilla elevadora
+- Carnet de conducir
+- Disponibilidad para trabajar en horario de madrugada (a partir de las 2:00h)
+- Buena disposicion fisica para tareas de carga/descarga
+
+REQUISITOS VALORABLES:
+- Carnet C+CAP
+- Experiencia previa en almacen, logistica o puestos similares
+
+FORMACION/APRENDIZAJE:
+- No es necesario conocimiento previo de pescados y mariscos, pero si capacidad y disposicion para aprender sobre calidades del producto, cortes y preparacion, manipulacion y procesos del puesto',
+ 'SE OFRECE:
+- Contrato a jornada completa
+- Horario de lunes a sabado (entrada a partir de las 2:00h)
+- Salario segun convenio y experiencia (17.000-23.000 EUR bruto/ano)
+- Posibilidad de promocion interna
+- Otros beneficios'),
+
 ('PRODUCCION', 'Produccion', 'Produccion, sushi, sala de envase',
- 'sushi,envase,envasado,produccion,fabrica,operario,linea,manipulador,elaboracion'),
+ 'sushi,envase,envasado,produccion,fabrica,operario,linea,manipulador,elaboracion',
+ 'Operario/a de Produccion',
+ 'Buscamos operario/a para linea de produccion. Tareas: envasado, etiquetado, control de calidad.',
+ 'Experiencia en produccion/fabrica. Disponibilidad para turnos.',
+ 'Contrato temporal con posibilidad de indefinido.'),
+
 ('ADMINISTRATIVO', 'Administrativo', 'Administrativo, secretariado, FP administracion',
- 'secretari,administrativ,contab,factur,oficina,recepcion,auxiliar admin'),
+ 'secretari,administrativ,contab,factur,oficina,recepcion,auxiliar admin',
+ 'Administrativo/a',
+ 'Buscamos administrativo/a para tareas de oficina. Tareas: gestion documental, atencion telefonica, facturacion.',
+ 'Experiencia en administracion. Manejo de Office. Buena organizacion.',
+ 'Contrato temporal/indefinido. Jornada completa.'),
+
 ('GESTION', 'Gestion', 'Gestion, grados universitarios (ADE, Derecho, etc.)',
- 'grado ade,grado derecho,licenciado,graduado,master,mba,universidad')
-ON DUPLICATE KEY UPDATE descripcion = VALUES(descripcion), keywords = VALUES(keywords);
+ 'grado ade,grado derecho,licenciado,graduado,master,mba,universidad',
+ 'Responsable de Area',
+ 'Buscamos titulado/a universitario/a para puesto de gestion. Tareas segun area asignada.',
+ 'Grado universitario (ADE, Derecho, etc.). Experiencia en gestion.',
+ 'Contrato indefinido. Jornada completa.'),
+
+('BECARIO', 'Becario', 'Becarios, practicas universitarias, formacion',
+ 'becario,practicas,universidad,estudiante,formacion,fp,grado,master',
+ 'Becario/a en Practicas',
+ 'Buscamos estudiante para practicas. Apoyo en tareas del departamento asignado.',
+ 'Estudiante universitario o FP. Convenio de practicas con centro educativo.',
+ 'Convenio de practicas. Jornada parcial compatible con estudios.')
+
+ON DUPLICATE KEY UPDATE
+    descripcion = VALUES(descripcion),
+    keywords = VALUES(keywords),
+    oferta_titulo = VALUES(oferta_titulo),
+    oferta_descripcion = VALUES(oferta_descripcion),
+    oferta_requisitos = VALUES(oferta_requisitos),
+    oferta_condiciones = VALUES(oferta_condiciones);
 
 
 -- =============================================================================

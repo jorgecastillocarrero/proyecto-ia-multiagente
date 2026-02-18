@@ -1,5 +1,187 @@
 # Estructura: CVs por Perfiles (Primera Fase)
 
+## 0. PETICION DE TRABAJADOR
+
+### 0.1 Descripcion
+
+El proceso de seleccion comienza cuando el **Gerente** o el **Director de RRHH** solicita un nuevo trabajador.
+
+### 0.2 Flujo
+
+```
+GERENTE / DIRECTOR RRHH
+         |
+         v
++---------------------------+
+| Crear peticion de         |
+| trabajador                |
++---------------------------+
+         |
+         v
++---------------------------+
+| Seleccionar PERFIL:       |
+| - PESCADERIA              |
+| - LOGISTICA               |
+| - PRODUCCION              |
+| - ADMINISTRATIVO          |
+| - GESTION                 |
+| - BECARIO                 |
++---------------------------+
+         |
+         v
++---------------------------+
+| Peticion CREADA           |
+| Estado: ABIERTA           |
++---------------------------+
+         |
+         v
++---------------------------+
+| Publicar oferta en        |
+| InfoJobs (manual)         |
++---------------------------+
+         |
+         v
++---------------------------+
+| Llegan CVs                |
+| (proceso actual)          |
++---------------------------+
+```
+
+### 0.3 Datos de la Peticion
+
+| Campo | Descripcion | Obligatorio |
+|-------|-------------|-------------|
+| ID | Identificador unico | Auto |
+| Perfil | PESCADERIA, LOGISTICA, PRODUCCION, ADMINISTRATIVO, GESTION | SI |
+| Solicitante | Gerente o Director RRHH | Auto |
+| Fecha Solicitud | Fecha de creacion de la peticion | Auto |
+| Publicado en | Donde se ha publicado (InfoJobs, LinkedIn, etc.) | NO |
+| Desde | Fecha inicio publicacion | NO |
+| Hasta | Fecha fin publicacion | NO |
+| Estado | ABIERTA, EN_PROCESO, CUBIERTA, CANCELADA | Auto |
+
+### 0.4 Estados de la Peticion
+
+| Estado | Descripcion |
+|--------|-------------|
+| ABIERTA | Peticion creada, pendiente de candidatos |
+| EN_PROCESO | Hay candidatos en proceso de seleccion |
+| CUBIERTA | Se ha contratado a alguien para esta peticion |
+| CANCELADA | Peticion cancelada (ya no se necesita) |
+
+### 0.5 Alerta Automatica
+
+Cuando se crea una peticion, aparece **automaticamente** una alerta en el dashboard configurado:
+
+```
++============================================================================+
+|  [!] NUEVA PETICION DE TRABAJADOR                                           |
++============================================================================+
+|                                                                             |
+|  Gerente ha solicitado un trabajador para LOGISTICA                         |
+|  Fecha: 18/02/2026                                                          |
+|                                                                             |
+|  [Ver peticion]  [Publicar en InfoJobs]                                     |
+|                                                                             |
++============================================================================+
+```
+
+### 0.6 Vista Dashboard - Peticiones
+
+```
++=====================================================================================================================+
+|  PETICIONES DE TRABAJADOR                                                                                           |
++=====================================================================================================================+
+|                                                                                                                     |
+|  [+ Nueva Peticion]                                                                                                 |
+|                                                                                                                     |
+|  +----+-------------+---------------+----------------+-------------+------------+------------+----------+--------+ |
+|  | ID | Perfil      | Solicitante   | Fecha Solicitud| Publicado   | Desde      | Hasta      | Estado   | Accion | |
+|  +----+-------------+---------------+----------------+-------------+------------+------------+----------+--------+ |
+|  | 1  | LOGISTICA   | Gerente       | 18/02/2026     | InfoJobs    | 18/02/2026 | 18/03/2026 | ABIERTA  | [Ver]  | |
+|  | 2  | PESCADERIA  | Director RRHH | 15/02/2026     | InfoJobs    | 15/02/2026 | 15/03/2026 | EN_PROCESO| [Ver] | |
+|  | 3  | PRODUCCION  | Gerente       | 10/02/2026     | -           | -          | -          | ABIERTA  | [Ver]  | |
+|  +----+-------------+---------------+----------------+-------------+------------+------------+----------+--------+ |
+|                                                                                                                     |
++=====================================================================================================================+
+```
+
+### 0.7 Tabla SQL: peticiones_trabajador
+
+```sql
+CREATE TABLE IF NOT EXISTS peticiones_trabajador (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    perfil_codigo VARCHAR(50) NOT NULL,
+    solicitante_rol ENUM('GERENTE', 'DIRECTOR_RRHH') NOT NULL,
+    solicitante_nombre VARCHAR(100),
+
+    -- Publicacion
+    publicado_en VARCHAR(100) COMMENT 'InfoJobs, LinkedIn, etc.',
+    fecha_publicacion_desde DATE,
+    fecha_publicacion_hasta DATE,
+
+    -- Estado
+    estado ENUM('ABIERTA', 'EN_PROCESO', 'CUBIERTA', 'CANCELADA') DEFAULT 'ABIERTA',
+
+    -- Relacion con candidato contratado (cuando se cubre)
+    candidato_contratado_id BIGINT UNSIGNED,
+    fecha_cubierta DATE,
+
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    INDEX idx_perfil (perfil_codigo),
+    INDEX idx_estado (estado),
+    INDEX idx_fecha (fecha_creacion)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+### 0.8 Relacion Peticion - Candidatos
+
+Cuando llegan CVs para un perfil, se pueden asociar a una peticion abierta:
+
+```sql
+-- Añadir columna a candidatos (si no existe)
+ALTER TABLE candidatos ADD COLUMN peticion_id INT;
+ALTER TABLE candidatos ADD INDEX idx_peticion (peticion_id);
+```
+
+### 0.9 Ofertas de Empleo por Perfil
+
+Cada perfil tiene una **plantilla de oferta de empleo** integrada en la tabla perfiles.
+
+#### Campos de Oferta en tabla perfiles
+
+| Campo | Descripcion |
+|-------|-------------|
+| oferta_titulo | Titulo de la oferta (ej: "Dependiente/a de Pescaderia") |
+| oferta_descripcion | Descripcion del puesto y tareas |
+| oferta_requisitos | Requisitos del candidato |
+| oferta_condiciones | Condiciones laborales ofrecidas |
+
+#### Vista Dashboard - Ofertas por Perfil
+
+```
++============================================================================+
+|  OFERTAS DE EMPLEO POR PERFIL                                               |
++============================================================================+
+|                                                                             |
+|  +----------------+--------------------------------+----------+-------------+  |
+|  | Perfil         | Titulo                         | Activo   | Acciones    |  |
+|  +----------------+--------------------------------+----------+-------------+  |
+|  | PESCADERIA     | Dependiente/a de Pescaderia    | [x]      | [Editar]    |  |
+|  | LOGISTICA      | Conductor/Repartidor           | [x]      | [Editar]    |  |
+|  | PRODUCCION     | Operario/a de Produccion       | [x]      | [Editar]    |  |
+|  | ADMINISTRATIVO | Administrativo/a               | [x]      | [Editar]    |  |
+|  | GESTION        | Responsable de Area            | [ ]      | [Editar]    |  |
+|  | BECARIO        | Becario/a en Practicas         | [x]      | [Editar]    |  |
+|  +----------------+--------------------------------+----------+-------------+  |
+|                                                                             |
++============================================================================+
+```
+
+---
+
 ## 1. Campos del Listado
 
 | # | Campo | Descripcion | Tipo BD |
@@ -45,6 +227,7 @@ ID |Nombre   |Apellido|Telefono   |Email               |Localid|Veh|B|C|CAP|Car|
 | PRODUCCION | sushi, envase, produccion, operario, fabrica | 18 |
 | ADMINISTRATIVO | secretari, administrativ, contab, oficina | 4 |
 | GESTION | grado ade, derecho, universidad, master | 0 |
+| BECARIO | becario, practicas, estudiante, formacion | 0 |
 
 **NOTA IMPORTANTE**: Esta estructura de campos y flujo aplica a los 5 perfiles anteriores.
 
