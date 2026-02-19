@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Manual Modulo RRHH - La Carihuela</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #1565C0; text-align: center; border-bottom: 3px solid #1565C0; padding-bottom: 10px; }
+        h2 { color: #1565C0; margin-top: 30px; border-bottom: 2px solid #1565C0; padding-bottom: 5px; }
+        h3 { color: #2196F3; margin-top: 20px; }
+        h4 { color: #1976D2; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
+        th { background: #1565C0; color: white; padding: 10px 5px; text-align: left; }
+        td { padding: 8px 5px; border: 1px solid #ddd; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        tr:hover { background: #e3f2fd; }
+        code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; }
+        .fecha { text-align: right; color: #999; font-size: 11px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px; }
+        strong { color: #1565C0; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MANUAL DEL MODULO RRHH - ERP La Carihuela</h1>
+<p><strong>Pescados La Carihuela</strong>
+<strong>Fecha:</strong> Febrero 2026
+<strong>Version:</strong> 1.3</p>
+<hr />
+<h2>INTRODUCCION</h2>
+<p>Este manual describe el funcionamiento del Modulo de Recursos Humanos (RRHH) en el sistema ERP de Pescados La Carihuela. El modulo gestiona todo el proceso desde la solicitud de personal hasta la contratacion.</p>
+<hr />
+<h2>1. PERFILES PROFESIONALES</h2>
+<h3>1.1 Que son los Perfiles</h3>
+<p>Los perfiles son las categorias profesionales que utiliza la empresa para clasificar las ofertas de empleo y los candidatos que se reciben.</p>
+<h3>1.2 Perfiles Disponibles</h3>
+<table>
+<thead>
+<tr>
+<th>Codigo</th>
+<th>Nombre</th>
+<th>Puesto Tipico</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PESCADERIA</td>
+<td>Pescaderia</td>
+<td>Dependiente/a de Pescaderia</td>
+<td>Personal de tienda, mostrador, corte y atencion al cliente</td>
+</tr>
+<tr>
+<td>LOGISTICA</td>
+<td>Logistica</td>
+<td>Operario/a de Logistica</td>
+<td>Almacen, reparto, conductores, carga/descarga</td>
+</tr>
+<tr>
+<td>PRODUCCION</td>
+<td>Produccion</td>
+<td>Operario/a de Produccion</td>
+<td>Sushi, sala de envase, linea de produccion</td>
+</tr>
+<tr>
+<td>ADMINISTRATIVO</td>
+<td>Administrativo</td>
+<td>Administrativo/a</td>
+<td>Oficina, secretariado, contabilidad</td>
+</tr>
+<tr>
+<td>GESTION</td>
+<td>Gestion</td>
+<td>Responsable de Area</td>
+<td>Titulados universitarios, puestos de responsabilidad</td>
+</tr>
+<tr>
+<td>BECARIO</td>
+<td>Becario</td>
+<td>Becario/a en Practicas</td>
+<td>Estudiantes en practicas</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>2. PETICIONES DE TRABAJADOR</h2>
+<h3>2.1 Que es una Peticion</h3>
+<p>Cuando un Gerente o Director de RRHH necesita contratar personal, crea una <strong>Peticion de Trabajador</strong> en el sistema.</p>
+<h3>2.2 Como Crear una Peticion</h3>
+<ol>
+<li>Acceder al modulo RRHH</li>
+<li>Seleccionar "Nueva Peticion"</li>
+<li>Elegir el <strong>Perfil</strong> (PESCADERIA, LOGISTICA, etc.)</li>
+<li>Indicar la <strong>Posicion</strong> (nombre del puesto)</li>
+<li>Indicar el numero de <strong>Plazas</strong></li>
+<li>Guardar</li>
+</ol>
+<h3>2.3 Campos de la Peticion</h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Descripcion</th>
+<th>Obligatorio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Perfil</td>
+<td>Categoria profesional</td>
+<td>SI</td>
+</tr>
+<tr>
+<td>Posicion</td>
+<td>Nombre especifico del puesto</td>
+<td>SI</td>
+</tr>
+<tr>
+<td>Plazas</td>
+<td>Numero de vacantes</td>
+<td>SI</td>
+</tr>
+<tr>
+<td>Prioridad</td>
+<td>Urgencia de la peticion</td>
+<td>SI</td>
+</tr>
+<tr>
+<td>Solicitante</td>
+<td>Quien hace la peticion (automatico)</td>
+<td>AUTO</td>
+</tr>
+<tr>
+<td>Fecha Solicitud</td>
+<td>Fecha de creacion (automatico)</td>
+<td>AUTO</td>
+</tr>
+<tr>
+<td>Portal</td>
+<td>Donde se publica (InfoJobs, LinkedIn, etc.)</td>
+<td>NO</td>
+</tr>
+<tr>
+<td>Desde</td>
+<td>Fecha inicio publicacion</td>
+<td>NO</td>
+</tr>
+<tr>
+<td>Hasta</td>
+<td>Fecha fin publicacion</td>
+<td>NO</td>
+</tr>
+<tr>
+<td>Estado</td>
+<td>ACTIVA o INACTIVA</td>
+<td>AUTO</td>
+</tr>
+</tbody>
+</table>
+<h3>2.4 Prioridades</h3>
+<table>
+<thead>
+<tr>
+<th>Prioridad</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MUY_ALTA</td>
+<td>Urgente, cubrir inmediatamente</td>
+</tr>
+<tr>
+<td>ALTA</td>
+<td>Prioritario</td>
+</tr>
+<tr>
+<td>MEDIA</td>
+<td>Normal (por defecto)</td>
+</tr>
+<tr>
+<td>BAJA</td>
+<td>Puede esperar</td>
+</tr>
+<tr>
+<td>MUY_BAJA</td>
+<td>Sin urgencia</td>
+</tr>
+</tbody>
+</table>
+<h3>2.5 Estados de la Peticion</h3>
+<table>
+<thead>
+<tr>
+<th>Estado</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ACTIVA</td>
+<td>El anuncio esta publicado en internet</td>
+</tr>
+<tr>
+<td>INACTIVA</td>
+<td>El anuncio no esta visible</td>
+</tr>
+</tbody>
+</table>
+<h3>2.5 Vista en el ERP</h3>
+<p><strong>Pantalla: Peticiones de Trabajador</strong></p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Perfil</th>
+<th>Posicion</th>
+<th>Plazas</th>
+<th>Solicitante</th>
+<th>Fecha Sol.</th>
+<th>Portal</th>
+<th>Desde</th>
+<th>Hasta</th>
+<th>Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>LOGISTICA</td>
+<td>Operario/a Logistica</td>
+<td>2</td>
+<td>Gerente</td>
+<td>15/01/2026</td>
+<td>InfoJobs</td>
+<td>27/01/2026</td>
+<td>28/03/2026</td>
+<td>ACTIVA</td>
+</tr>
+<tr>
+<td>2</td>
+<td>PESCADERIA</td>
+<td>Dependiente/a Pescaderia</td>
+<td>2</td>
+<td>Gerente</td>
+<td>13/02/2026</td>
+<td>InfoJobs</td>
+<td>13/02/2026</td>
+<td>14/04/2026</td>
+<td>ACTIVA</td>
+</tr>
+<tr>
+<td>3</td>
+<td>BECARIO</td>
+<td>Becario Administracion</td>
+<td>1</td>
+<td>Gerente</td>
+<td>01/02/2026</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>ACTIVA</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>3. ENTRADA DE CVs Y CANDIDATOS</h2>
+<h3>3.1 Como Llegan los CVs</h3>
+<p>Los CVs llegan automaticamente desde los portales de empleo donde se publican las ofertas (InfoJobs, LinkedIn, etc.).</p>
+<h3>3.2 Vista de Candidatos por Perfil</h3>
+<table>
+<thead>
+<tr>
+<th>Perfil</th>
+<th>Total</th>
+<th>Sin Validar</th>
+<th>Con Duda</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LOGISTICA</td>
+<td>67</td>
+<td>65</td>
+<td>2</td>
+</tr>
+<tr>
+<td>PRODUCCION</td>
+<td>18</td>
+<td>17</td>
+<td>1</td>
+</tr>
+<tr>
+<td>PESCADERIA</td>
+<td>7</td>
+<td>4</td>
+<td>3</td>
+</tr>
+<tr>
+<td>ADMINISTRATIVO</td>
+<td>4</td>
+<td>4</td>
+<td>0</td>
+</tr>
+<tr>
+<td>SIN CLASIFICAR</td>
+<td>216</td>
+<td>216</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>TOTAL</strong></td>
+<td><strong>312</strong></td>
+<td><strong>306</strong></td>
+<td><strong>6</strong></td>
+</tr>
+</tbody>
+</table>
+<h3>3.3 Candidatos Pendientes de Clasificar</h3>
+<p>Los candidatos sin perfil asignado aparecen en esta vista:</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Nombre</th>
+<th>Apellido</th>
+<th>Telefono</th>
+<th>Localidad</th>
+<th>Veh</th>
+<th>B</th>
+<th>C</th>
+<th>CAP</th>
+<th>Car</th>
+<th>Exp</th>
+<th>CV</th>
+<th>Asignar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>ADAMA</td>
+<td>FOFANA</td>
+<td>633 171 068</td>
+<td>-</td>
+<td>N</td>
+<td>N</td>
+<td>N</td>
+<td>N</td>
+<td>N</td>
+<td>12.1</td>
+<td>[+]</td>
+<td>[ v ]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Desplegable Asignar:</strong>
+- PESCADERIA, LOGISTICA, PRODUCCION, ADMINISTRATIVO, GESTION, BECARIO → Asigna perfil
+- NO → Va a DESCARTADOS</p>
+<h3>3.4 Candidatos con Perfil - Sin Validar</h3>
+<p>Los candidatos con perfil pero sin validar aparecen en su listado correspondiente:</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Nombre</th>
+<th>Apellido</th>
+<th>Telefono</th>
+<th>Localidad</th>
+<th>Veh</th>
+<th>B</th>
+<th>C</th>
+<th>CAP</th>
+<th>Car</th>
+<th>Exp</th>
+<th>CV</th>
+<th>Entrevista</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>65</td>
+<td>Adela</td>
+<td>Ruano</td>
+<td>675 942 449</td>
+<td>Cordoba</td>
+<td>S</td>
+<td>S</td>
+<td>N</td>
+<td>N</td>
+<td>N</td>
+<td>20.3</td>
+<td>[+]</td>
+<td>Pendiente</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Desplegable Entrevista:</strong>
+- Pendiente → Esperando decision
+- Si → Pasa a llamadas para entrevistas
+- No → Va a DESCARTADOS</p>
+<h3>3.5 Candidatos con Perfil - Con Duda</h3>
+<p>Los candidatos que tienen una duda pendiente de resolver:</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Nombre</th>
+<th>Apellido</th>
+<th>Telefono</th>
+<th>Duda</th>
+<th>Respuesta</th>
+<th>Accion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>72</td>
+<td>Carmen</td>
+<td>Lopez</td>
+<td>654 123 456</td>
+<td>Solo quiere tienda Barraquer</td>
+<td>[ ]</td>
+<td>[ v ]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Desplegable Accion:</strong>
+- Si → Escribe respuesta para el Llamador → Vuelve a Llamadas
+- No → Descartado con Motivo = la Duda</p>
+<hr />
+<h2>4. TIPOS DE DESCARTE</h2>
+<h3>4.1 Descartes Automaticos</h3>
+<p>El sistema descarta automaticamente candidatos segun reglas configurables:</p>
+<table>
+<thead>
+<tr>
+<th>Regla</th>
+<th>Condicion</th>
+<th>Motivo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>REGLA_EXPERIENCIA</td>
+<td>Experiencia &lt; 1 ano</td>
+<td>Experiencia menor a 1 ano</td>
+</tr>
+<tr>
+<td>REGLA_DISTANCIA</td>
+<td>Distancia &gt; 40 km</td>
+<td>Distancia mayor a 40 km</td>
+</tr>
+</tbody>
+</table>
+<h3>4.2 Descartes Manuales</h3>
+<p>El usuario puede descartar candidatos seleccionando un motivo:</p>
+<table>
+<thead>
+<tr>
+<th>Motivo</th>
+<th>Descripcion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MALAS_REFERENCIAS</td>
+<td>Malas referencias</td>
+</tr>
+<tr>
+<td>NO_INTERESADO</td>
+<td>Candidato no interesado</td>
+</tr>
+<tr>
+<td>NO_CONTESTA</td>
+<td>No contesta tras varios intentos</td>
+</tr>
+<tr>
+<td>DESCARTADO_ENTREVISTA</td>
+<td>Descartado tras entrevista</td>
+</tr>
+<tr>
+<td>OTROS</td>
+<td>Otros motivos</td>
+</tr>
+</tbody>
+</table>
+<h3>4.3 Acceso en el ERP</h3>
+<p><strong>Menu:</strong> RRHH &gt; Configuracion &gt; Descartes</p>
+<ul>
+<li><strong>Motivos de Descarte</strong>: Configurar motivos automaticos y manuales</li>
+<li><strong>Reglas Automaticas</strong>: Configurar condiciones para descarte automatico</li>
+<li><strong>Candidatos Descartados</strong>: Ver historial de candidatos descartados</li>
+</ul>
+<hr />
+<h2>5. LLAMADAS PARA ENTREVISTAS</h2>
+<h3>5.1 Que es</h3>
+<p>Cuando un candidato se marca como "Entrevista = Si", pasa a la fase de llamadas donde el Llamador contacta al candidato para concertar una cita de entrevista.</p>
+<h3>5.2 Vista en el ERP</h3>
+<p><strong>Menu:</strong> RRHH &gt; Llamadas &gt; Llamadas para Entrevistas</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Nombre</th>
+<th>Apellido</th>
+<th>Telefono</th>
+<th>Localidad</th>
+<th>Veh</th>
+<th>B</th>
+<th>C</th>
+<th>CAP</th>
+<th>Car</th>
+<th>Exp</th>
+<th>CV</th>
+<th>Estado</th>
+<th>Intentos</th>
+<th>Notas</th>
+<th>Dia</th>
+<th>Hora</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>65</td>
+<td>[Adela]</td>
+<td>[Ruano]</td>
+<td>[675 942 449]</td>
+<td>[Cordoba]</td>
+<td>[S]</td>
+<td>[S]</td>
+<td>[N]</td>
+<td>[N]</td>
+<td>[N]</td>
+<td>[20.3]</td>
+<td>[+]</td>
+<td>Si</td>
+<td>1</td>
+<td>interesada</td>
+<td>21/02</td>
+<td>10:00</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Nota:</strong> Los campos entre corchetes son editables para corregir errores de extraccion del CV.</p>
+<h3>5.3 Campos de la Vista</h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Descripcion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Estado</td>
+<td>Si / No / Duda</td>
+</tr>
+<tr>
+<td>Intentos</td>
+<td>1, 2, 3, 4, 5 (descarte automatico configurable)</td>
+</tr>
+<tr>
+<td>Notas</td>
+<td>Comentarios de la llamada</td>
+</tr>
+<tr>
+<td>Dia</td>
+<td>Fecha de la entrevista (solo si Estado = Si)</td>
+</tr>
+<tr>
+<td>Hora</td>
+<td>Hora de la entrevista (solo si Estado = Si)</td>
+</tr>
+</tbody>
+</table>
+<h3>5.4 Opciones de Estado</h3>
+<table>
+<thead>
+<tr>
+<th>Estado</th>
+<th>Que pasa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Si</strong></td>
+<td>Aparecen campos Dia y Hora. El candidato pasa a ENTREVISTAS</td>
+</tr>
+<tr>
+<td><strong>No</strong></td>
+<td>El candidato pasa a DESCARTADOS</td>
+</tr>
+<tr>
+<td><strong>Duda</strong></td>
+<td>El candidato vuelve a PERFILES (pestana Con Duda) para que el Evaluador decida</td>
+</tr>
+</tbody>
+</table>
+<h3>5.5 Flujo de Dudas</h3>
+<ol>
+<li><strong>Llamador</strong> marca "Duda" con comentario: "Solo quiere trabajar en tienda Barraquer"</li>
+<li>El candidato aparece en <strong>PERFILES &gt; Con Duda</strong></li>
+<li><strong>Evaluador</strong> ve la duda y decide:</li>
+<li><strong>Si es No</strong>: Descartado con Motivo = la Duda</li>
+<li><strong>Si es Si</strong>: Escribe nota para el Llamador y vuelve a Llamadas</li>
+<li><strong>Llamador</strong> ve la nota, llama de nuevo y marca Si/No</li>
+</ol>
+<h3>5.6 Ejemplos de Notas</h3>
+<table>
+<thead>
+<tr>
+<th>Estado</th>
+<th>Ejemplo de Nota</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Si</td>
+<td>"Interesada en el sector, tiene experiencia"</td>
+</tr>
+<tr>
+<td>No</td>
+<td>"Trabajando actualmente, pero buena impresion para el futuro"</td>
+</tr>
+<tr>
+<td>Duda</td>
+<td>"Quiere saber cuales son los turnos de trabajo"</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>6. OFERTAS DE EMPLEO</h2>
+<h3>6.1 Ofertas por Perfil</h3>
+<p>Cada perfil tiene una plantilla de oferta de empleo lista para publicar:</p>
+<table>
+<thead>
+<tr>
+<th>Perfil</th>
+<th>Titulo Oferta</th>
+<th>Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PESCADERIA</td>
+<td>Dependiente/a de Pescaderia</td>
+<td>Documentada</td>
+</tr>
+<tr>
+<td>LOGISTICA</td>
+<td>Operario/a de Logistica de Almacen</td>
+<td>Documentada</td>
+</tr>
+<tr>
+<td>PRODUCCION</td>
+<td>Operario/a de Produccion</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>ADMINISTRATIVO</td>
+<td>Administrativo/a</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>GESTION</td>
+<td>Responsable de Area</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>BECARIO</td>
+<td>Becario/a en Practicas</td>
+<td>Pendiente</td>
+</tr>
+</tbody>
+</table>
+<h3>6.2 Vista Dashboard - Ofertas por Perfil</h3>
+<table>
+<thead>
+<tr>
+<th>Perfil</th>
+<th>Titulo</th>
+<th>Plazas</th>
+<th>Creacion</th>
+<th>Portal</th>
+<th>Publicada</th>
+<th>Desde</th>
+<th>Hasta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LOGISTICA</td>
+<td>Operario/a Logistica</td>
+<td>2</td>
+<td>15/01/2026</td>
+<td>InfoJobs</td>
+<td>Si</td>
+<td>27/01/2026</td>
+<td>28/03/2026</td>
+</tr>
+<tr>
+<td>PESCADERIA</td>
+<td>Dependiente/a Pescaderia</td>
+<td>2</td>
+<td>13/02/2026</td>
+<td>InfoJobs</td>
+<td>Si</td>
+<td>13/02/2026</td>
+<td>14/04/2026</td>
+</tr>
+<tr>
+<td>PRODUCCION</td>
+<td>Operario/a Produccion</td>
+<td>0</td>
+<td>-</td>
+<td>-</td>
+<td>No</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>ADMINISTRAT.</td>
+<td>Administrativo/a</td>
+<td>0</td>
+<td>-</td>
+<td>-</td>
+<td>No</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>GESTION</td>
+<td>Responsable de Area</td>
+<td>0</td>
+<td>-</td>
+<td>-</td>
+<td>No</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>BECARIO</td>
+<td>Becario Administracion</td>
+<td>1</td>
+<td>01/02/2026</td>
+<td>-</td>
+<td>No</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>7. ROLES Y PERMISOS</h2>
+<h3>7.1 Roles en el Modulo RRHH</h3>
+<table>
+<thead>
+<tr>
+<th>Rol</th>
+<th>Responsabilidades</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Director RRHH</td>
+<td>Completar datos contrato, firmar documentos</td>
+</tr>
+<tr>
+<td>Gerente</td>
+<td>Crear peticiones de trabajador</td>
+</tr>
+<tr>
+<td>Llamador</td>
+<td>Llamar candidatos, concertar entrevistas</td>
+</tr>
+<tr>
+<td>Evaluador</td>
+<td>Revisar perfiles, resolver dudas, decidir si/no</td>
+</tr>
+<tr>
+<td>Entrevistador</td>
+<td>Realizar entrevistas, evaluar candidatos</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>8. DASHBOARD RRHH</h2>
+<h3>8.1 Que es</h3>
+<p>El Dashboard RRHH es la pantalla principal donde los roles de Evaluador, Entrevistador, Director RRHH y Gerente ven el resumen del proceso de seleccion.</p>
+<p><strong>Acceso:</strong> Menu RRHH &gt; Dashboard</p>
+<h3>8.2 Secciones del Dashboard</h3>
+<h4>1. OFERTAS ACTIVAS</h4>
+<p>Muestra las ofertas de empleo publicadas actualmente, ordenadas por prioridad.</p>
+<table>
+<thead>
+<tr>
+<th>Prioridad</th>
+<th>Perfil</th>
+<th>Posicion</th>
+<th>Plazas</th>
+<th>Portal</th>
+<th>Desde</th>
+<th>Hasta</th>
+<th>Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MUY_ALTA</td>
+<td>PESCADERIA</td>
+<td>Dependiente/a Pescaderia</td>
+<td>2</td>
+<td>InfoJobs</td>
+<td>13/02/2026</td>
+<td>14/04/2026</td>
+<td>ACTIVA</td>
+</tr>
+<tr>
+<td>ALTA</td>
+<td>LOGISTICA</td>
+<td>Operario/a Logistica</td>
+<td>2</td>
+<td>InfoJobs</td>
+<td>27/01/2026</td>
+<td>28/03/2026</td>
+<td>ACTIVA</td>
+</tr>
+</tbody>
+</table>
+<h4>2. CANDIDATOS</h4>
+<p>Resumen de candidatos por perfil con su estado de validacion.</p>
+<table>
+<thead>
+<tr>
+<th>Perfil</th>
+<th>Total</th>
+<th>Sin Validar</th>
+<th>Con Duda</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LOGISTICA</td>
+<td>67</td>
+<td>65</td>
+<td>2</td>
+</tr>
+<tr>
+<td>PESCADERIA</td>
+<td>7</td>
+<td>4</td>
+<td>3</td>
+</tr>
+<tr>
+<td>PRODUCCION</td>
+<td>18</td>
+<td>17</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>TOTAL</strong></td>
+<td><strong>312</strong></td>
+<td><strong>306</strong></td>
+<td><strong>6</strong></td>
+</tr>
+</tbody>
+</table>
+<h4>3. ENTREVISTAS</h4>
+<p>Lista de entrevistas programadas ordenadas por dia y hora.</p>
+<table>
+<thead>
+<tr>
+<th>Dia</th>
+<th>Hora</th>
+<th>Nombre</th>
+<th>Apellido</th>
+<th>Perfil</th>
+<th>Tipo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>19/02/2026</td>
+<td>10:00</td>
+<td>Adela</td>
+<td>Ruano</td>
+<td>PESCADERIA</td>
+<td>1a Entrevista</td>
+</tr>
+<tr>
+<td>20/02/2026</td>
+<td>09:00</td>
+<td>Carmen</td>
+<td>Lopez</td>
+<td>PESCADERIA</td>
+<td>2a Entrevista</td>
+</tr>
+</tbody>
+</table>
+<h3>8.3 Reporte Semanal</h3>
+<p>Estas mismas 3 secciones se incluyen en el Reporte Semanal RRHH que se genera automaticamente.</p>
+<hr />
+<h2>9. DASHBOARD LLAMADOR</h2>
+<h3>9.1 Que es</h3>
+<p>El Dashboard Llamador tiene 2 pantallas para gestionar las llamadas a candidatos.</p>
+<h3>9.2 Pantalla 1: Panel Principal</h3>
+<p><strong>Acceso:</strong> Menu RRHH &gt; Mi Panel</p>
+<p>Resumen de llamadas pendientes ordenadas por prioridad + entrevistas del dia.</p>
+<pre><code>+--------------------------------------------------+
+|  LLAMADAS PARA ENTREVISTAS                       |
++--------------------------------------------------+
+|                                                  |
+|  [!] MUY ALTA                                    |
+|      Dependiente/a de Pescaderia .......... 15   |
+|                                                  |
+|  [!] ALTA                                        |
+|      Operario/a Logistico ................. 6    |
+|                                                  |
+|  [ ] MEDIA                                       |
+|      Becario Administracion ............... 3    |
+|                                                  |
++--------------------------------------------------+
+
++--------------------------------------------------+
+|  ENTREVISTAS DE HOY                              |
++--------------------------------------------------+
+|                                                  |
+|  10:00  Adela Ruano - PESCADERIA - 1a Entrev.    |
+|  11:30  Angel Garcia - LOGISTICA - 1a Entrev.    |
+|  16:00  Carmen Lopez - PESCADERIA - 2a Entrev.   |
+|                                                  |
++--------------------------------------------------+
+</code></pre>
+<ul>
+<li>Clic en Llamadas → abre Pantalla 2 (Llamadas por Perfil)</li>
+<li>Entrevistas de Hoy → para gestionar con el Entrevistador cuando llegue el candidato</li>
+</ul>
+<h3>9.3 Pantalla 2: Llamadas por Perfil</h3>
+<p><strong>Acceso:</strong> Clic en perfil desde Panel Principal</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Nombre</th>
+<th>Apellido</th>
+<th>Telefono</th>
+<th>Perfil</th>
+<th>Veh</th>
+<th>B</th>
+<th>C</th>
+<th>CAP</th>
+<th>Car</th>
+<th>Exp</th>
+<th>CV</th>
+<th>Estado</th>
+<th>Intentos</th>
+<th>Notas</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>65</td>
+<td>[Adela]</td>
+<td>[Ruano]</td>
+<td>[675 942 449]</td>
+<td>PESCADERIA</td>
+<td>[S]</td>
+<td>[S]</td>
+<td>[N]</td>
+<td>[N]</td>
+<td>[N]</td>
+<td>[20.3]</td>
+<td>[+]</td>
+<td>[ v ]</td>
+<td>[ v ]</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Campos editables</strong> (entre corchetes): para corregir errores del CV</p>
+<p><strong>Si Estado = Si:</strong> aparecen columnas Dia y Hora</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Nombre</th>
+<th>Apellido</th>
+<th>Telefono</th>
+<th>Estado</th>
+<th>Intentos</th>
+<th>Notas</th>
+<th>Dia</th>
+<th>Hora</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>65</td>
+<td>[Adela]</td>
+<td>[Ruano]</td>
+<td>[675 942 449]</td>
+<td>Si</td>
+<td>1</td>
+<td>interesada</td>
+<td>[21/02]</td>
+<td>[10:00]</td>
+</tr>
+</tbody>
+</table>
+<h3>9.4 Funcionamiento</h3>
+<table>
+<thead>
+<tr>
+<th>Accion</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Marca <strong>Si</strong></td>
+<td>Candidato sale de la lista, contador -1, aparecen campos Dia/Hora</td>
+</tr>
+<tr>
+<td>Marca <strong>No</strong></td>
+<td>Candidato sale de la lista, va a Descartados</td>
+</tr>
+<tr>
+<td>Marca <strong>Duda</strong></td>
+<td>Candidato sale de la lista, va a Perfiles (Con Duda)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>10. UBICACION DE DATOS</h2>
+<h3>10.1 Tablas en Base de Datos</h3>
+<table>
+<thead>
+<tr>
+<th>Tabla</th>
+<th>Descripcion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>perfiles</td>
+<td>Perfiles profesionales + ofertas de empleo</td>
+</tr>
+<tr>
+<td>peticiones_trabajador</td>
+<td>Peticiones de personal</td>
+</tr>
+<tr>
+<td>candidatos</td>
+<td>Candidatos en proceso</td>
+</tr>
+<tr>
+<td>asignacion_llamadas</td>
+<td>Llamadas para concertar entrevistas</td>
+</tr>
+<tr>
+<td>entrevistas</td>
+<td>Entrevistas programadas y realizadas</td>
+</tr>
+<tr>
+<td>motivos_descarte</td>
+<td>Catalogo de motivos de descarte</td>
+</tr>
+<tr>
+<td>reglas_descarte</td>
+<td>Reglas automaticas de descarte</td>
+</tr>
+<tr>
+<td>candidatos_descartados</td>
+<td>Historial de descartados</td>
+</tr>
+</tbody>
+</table>
+<h3>10.2 Servidor</h3>
+<ul>
+<li><strong>IP:</strong> 192.168.1.133</li>
+<li><strong>Base de datos:</strong> gestion.pescadoslacarihuela.es</li>
+</ul>
+<hr />
+<h2>11. DOCUMENTOS GENERADOS</h2>
+<p>El sistema genera documentacion en tres formatos:</p>
+<table>
+<thead>
+<tr>
+<th>Formato</th>
+<th>Extension</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Markdown</td>
+<td>.md</td>
+<td>Edicion y control de versiones</td>
+</tr>
+<tr>
+<td>HTML</td>
+<td>.html</td>
+<td>Visualizacion en navegador</td>
+</tr>
+<tr>
+<td>PDF</td>
+<td>.pdf</td>
+<td>Impresion y distribucion</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Manual del Modulo RRHH - Pescados La Carihuela - Version 1.3</em></p>
+        <p class="fecha">Generado: 19/02/2026 06:33</p>
+    </div>
+</body>
+</html>

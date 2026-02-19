@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte Semanal RRHH</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1565C0;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .empresa {
+            text-align: center;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .semana {
+            text-align: center;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 30px;
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        h2 {
+            color: #1565C0;
+            font-size: 14px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #1565C0;
+            padding-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        th {
+            background: #1565C0;
+            color: white;
+            padding: 8px 5px;
+            text-align: center;
+        }
+        td {
+            padding: 6px 5px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        tr:hover {
+            background: #e3f2fd;
+        }
+        .estado-activa {
+            background: #c8e6c9;
+            color: #2e7d32;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .estado-inactiva {
+            background: #fff3e0;
+            color: #ef6c00;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .tipo-1a {
+            background: #e3f2fd;
+            color: #1565C0;
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+        .tipo-2a {
+            background: #fff3e0;
+            color: #ef6c00;
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+        .fuente {
+            font-size: 10px;
+            color: #999;
+            text-align: right;
+            margin-top: 20px;
+        }
+        .seccion-titulo {
+            background: #1565C0;
+            color: white;
+            padding: 10px;
+            margin-top: 30px;
+            margin-bottom: 0;
+            border-radius: 5px 5px 0 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>REPORTE SEMANAL RRHH</h1>
+        <p class="empresa">Pescados La Carihuela</p>
+        <p class="semana"><strong>Semana 8</strong> - del 16/02/2026 al 22/02/2026 (6 dias laborables)</p>
+
+        <h2>1. OFERTAS ACTIVAS</h2>
+        <p style="font-size: 11px; color: #666; margin-bottom: 10px;">Ordenadas por prioridad</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Prioridad</th>
+                    <th>Perfil</th>
+                    <th>Posicion</th>
+                    <th>Plazas</th>
+                    <th>Portal</th>
+                    <th>Desde</th>
+                    <th>Hasta</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span style="background:#ffcdd2;color:#c62828;padding:3px 8px;border-radius:3px;font-weight:bold;">MUY ALTA</span></td>
+                    <td>PESCADERIA</td>
+                    <td>Dependiente/a Pescaderia</td>
+                    <td>2</td>
+                    <td>InfoJobs</td>
+                    <td>13/02/2026</td>
+                    <td>14/04/2026</td>
+                    <td><span class="estado-activa">ACTIVA</span></td>
+                </tr>
+                <tr>
+                    <td><span style="background:#ffe0b2;color:#e65100;padding:3px 8px;border-radius:3px;font-weight:bold;">ALTA</span></td>
+                    <td>LOGISTICA</td>
+                    <td>Operario/a Logistica</td>
+                    <td>2</td>
+                    <td>InfoJobs</td>
+                    <td>27/01/2026</td>
+                    <td>28/03/2026</td>
+                    <td><span class="estado-activa">ACTIVA</span></td>
+                </tr>
+                <tr>
+                    <td><span style="background:#e3f2fd;color:#1565C0;padding:3px 8px;border-radius:3px;">MEDIA</span></td>
+                    <td>BECARIO</td>
+                    <td>Becario Administracion</td>
+                    <td>1</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td><span class="estado-activa">ACTIVA</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>2. CANDIDATOS</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Perfil</th>
+                    <th>Total</th>
+                    <th>Sin Validar</th>
+                    <th>Con Duda</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>LOGISTICA</td>
+                    <td>67</td>
+                    <td>65</td>
+                    <td>2</td>
+                </tr>
+                <tr>
+                    <td>PESCADERIA</td>
+                    <td>7</td>
+                    <td>4</td>
+                    <td>3</td>
+                </tr>
+                <tr>
+                    <td>PRODUCCION</td>
+                    <td>18</td>
+                    <td>17</td>
+                    <td>1</td>
+                </tr>
+                <tr>
+                    <td>ADMINISTRATIVO</td>
+                    <td>4</td>
+                    <td>4</td>
+                    <td>0</td>
+                </tr>
+                <tr style="background: #fff3e0;">
+                    <td><strong>SIN CLASIFICAR</strong></td>
+                    <td><strong>216</strong></td>
+                    <td><strong>216</strong></td>
+                    <td><strong>0</strong></td>
+                </tr>
+                <tr style="background: #e3f2fd;">
+                    <td><strong>TOTAL</strong></td>
+                    <td><strong>312</strong></td>
+                    <td><strong>306</strong></td>
+                    <td><strong>6</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>3. ENTREVISTAS</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Dia</th>
+                    <th>Hora</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Perfil</th>
+                    <th>Tipo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>19/02/2026</td>
+                    <td>10:00</td>
+                    <td>Adela</td>
+                    <td>Ruano</td>
+                    <td>PESCADERIA</td>
+                    <td><span class="tipo-1a">1a Entrevista</span></td>
+                </tr>
+                <tr>
+                    <td>19/02/2026</td>
+                    <td>11:30</td>
+                    <td>Angel</td>
+                    <td>Garcia</td>
+                    <td>LOGISTICA</td>
+                    <td><span class="tipo-1a">1a Entrevista</span></td>
+                </tr>
+                <tr>
+                    <td>20/02/2026</td>
+                    <td>09:00</td>
+                    <td>Carmen</td>
+                    <td>Lopez</td>
+                    <td>PESCADERIA</td>
+                    <td><span class="tipo-2a">2a Entrevista</span></td>
+                </tr>
+                <tr>
+                    <td>21/02/2026</td>
+                    <td>10:00</td>
+                    <td>Borja</td>
+                    <td>Mendez</td>
+                    <td>LOGISTICA</td>
+                    <td><span class="tipo-1a">1a Entrevista</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>4. CARNETS Y PERMISOS</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Candidatos</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Carnet B</td>
+                    <td>141</td>
+                </tr>
+                <tr>
+                    <td>Carnet C</td>
+                    <td>22</td>
+                </tr>
+                <tr>
+                    <td>CAP</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>Carretillero</td>
+                    <td>0</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p class="fuente">Fuente: tabla <code>peticiones_trabajador</code>, <code>candidatos</code>, <code>entrevistas</code> | Semana: tabla <code>nuevo_carihuela_jorge_calendario_anual</code></p>
+    </div>
+</body>
+</html>

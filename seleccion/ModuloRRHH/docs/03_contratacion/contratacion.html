@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MODULO RRHH - CONTRATACION - ModuloRRHH</title>
+    <style>
+
+@page {
+    size: A4;
+    margin: 2cm;
+    @bottom-right {
+        content: "Página " counter(page) " de " counter(pages);
+        font-size: 9pt;
+        color: #666;
+    }
+    @bottom-left {
+        content: "ModuloRRHH - Pescados La Carihuela";
+        font-size: 9pt;
+        color: #666;
+    }
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #333;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    color: #1a5276;
+    border-bottom: 3px solid #1a5276;
+    padding-bottom: 10px;
+    margin-top: 0;
+}
+
+h2 {
+    color: #2874a6;
+    border-bottom: 1px solid #aed6f1;
+    padding-bottom: 5px;
+    margin-top: 30px;
+}
+
+h3 {
+    color: #3498db;
+    margin-top: 25px;
+}
+
+h4 {
+    color: #5dade2;
+    margin-top: 20px;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 15px 0;
+    font-size: 10pt;
+}
+
+th, td {
+    border: 1px solid #bdc3c7;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #2874a6;
+    color: white;
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background-color: #f8f9f9;
+}
+
+tr:hover {
+    background-color: #ebf5fb;
+}
+
+code {
+    background-color: #f4f6f7;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 10pt;
+}
+
+pre {
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    font-size: 9pt;
+    line-height: 1.4;
+}
+
+pre code {
+    background-color: transparent;
+    padding: 0;
+    color: inherit;
+}
+
+blockquote {
+    border-left: 4px solid #3498db;
+    margin: 15px 0;
+    padding: 10px 20px;
+    background-color: #ebf5fb;
+}
+
+hr {
+    border: none;
+    border-top: 2px solid #eaecee;
+    margin: 30px 0;
+}
+
+ul, ol {
+    padding-left: 25px;
+}
+
+li {
+    margin-bottom: 5px;
+}
+
+strong {
+    color: #1a5276;
+}
+
+.header-info {
+    background-color: #eaf2f8;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border-left: 4px solid #2874a6;
+}
+
+.fecha-generacion {
+    text-align: right;
+    color: #7f8c8d;
+    font-size: 9pt;
+    margin-top: 30px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+    </style>
+</head>
+<body>
+    <div class="header-info">
+        <strong>ModuloRRHH</strong> - Pescados La Carihuela<br>
+        <small>Documento: MODULO RRHH - CONTRATACION</small>
+    </div>
+
+<h1>MODULO RRHH - CONTRATACION</h1>
+<h2>1. Integracion ERP: CONTRATADO → OPERADORES</h2>
+<h3>1.1 Flujo de Contratacion</h3>
+<p>Cuando un candidato pasa a CONTRATADO, se crea automaticamente un registro en la tabla <code>operadores</code> del ERP.</p>
+<pre><code>CONTRATADO (seleccion)
+         |
+         v
++---------------------------+
+| Crear registro en         |
+| tabla OPERADORES (ERP)    |
+| ID automatico             |
++---------------------------+
+         |
+         v
++---------------------------+
+| Candidato ahora es        |
+| EMPLEADO en el sistema    |
++---------------------------+
+</code></pre>
+<h3>1.2 Mapeo de Campos: candidatos → operadores</h3>
+<table>
+<thead>
+<tr>
+<th>Campo CANDIDATOS</th>
+<th>Campo OPERADORES</th>
+<th>Tipo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>nombre</td>
+<td>Nombre</td>
+<td>char(30)</td>
+</tr>
+<tr>
+<td>apellido1</td>
+<td>Apellido1</td>
+<td>char(15)</td>
+</tr>
+<tr>
+<td>apellido2</td>
+<td>Apellido2</td>
+<td>char(15)</td>
+</tr>
+<tr>
+<td>email</td>
+<td>email</td>
+<td>varchar(255)</td>
+</tr>
+<tr>
+<td>telefono</td>
+<td>telefono</td>
+<td>varchar(255)</td>
+</tr>
+<tr>
+<td>dni</td>
+<td>Nif</td>
+<td>varchar(255)</td>
+</tr>
+<tr>
+<td>residencia</td>
+<td>Poblacion</td>
+<td>varchar(50)</td>
+</tr>
+<tr>
+<td>provincia</td>
+<td>Provincia</td>
+<td>varchar(50)</td>
+</tr>
+<tr>
+<td>codigo_postal</td>
+<td>Cp</td>
+<td>char(5)</td>
+</tr>
+<tr>
+<td>perfil_codigo</td>
+<td>categoria_profesional_id</td>
+<td>int (FK)</td>
+</tr>
+<tr>
+<td>-</td>
+<td>activo</td>
+<td>1 (nuevo empleado)</td>
+</tr>
+<tr>
+<td>-</td>
+<td>idEmpresa</td>
+<td>(config)</td>
+</tr>
+<tr>
+<td>-</td>
+<td>fecha_desde</td>
+<td>fecha contratacion</td>
+</tr>
+<tr>
+<td>-</td>
+<td>created_at</td>
+<td>timestamp auto</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>2. Datos del Contrato</h2>
+<h3>2.1 Campos que completa el Director RRHH</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Campo</th>
+<th>Descripcion</th>
+<th>Tipo</th>
+<th>Ejemplo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Horas</td>
+<td>Horas semanales de trabajo</td>
+<td>INT</td>
+<td>40, 35, 20</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Tipo de horario</td>
+<td>Tipo de jornada/turno</td>
+<td>ENUM</td>
+<td>Mañana, Tarde, Partido, Rotativo</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Categoria profesional</td>
+<td>Categoria segun convenio</td>
+<td>FK</td>
+<td>Oficial 1a, Peon, Administrativo</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Fecha desde</td>
+<td>Fecha inicio del contrato</td>
+<td>DATE</td>
+<td>01/03/2026</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Fecha hasta</td>
+<td>Fecha fin del contrato (si temporal)</td>
+<td>DATE</td>
+<td>01/09/2026 o NULL (indefinido)</td>
+</tr>
+</tbody>
+</table>
+<h3>2.2 Campos que completa Hermi (Asesor SS)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Campo</th>
+<th>Descripcion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Tipo de contrato</td>
+<td>Temporal, indefinido, etc.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Codigo de contrato</td>
+<td>Codigo oficial del contrato</td>
+</tr>
+</tbody>
+</table>
+<h3>2.3 Opciones de Tipo de Horario</h3>
+<table>
+<thead>
+<tr>
+<th>Codigo</th>
+<th>Descripcion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MANANA</td>
+<td>Turno de mañana</td>
+</tr>
+<tr>
+<td>TARDE</td>
+<td>Turno de tarde</td>
+</tr>
+<tr>
+<td>PARTIDO</td>
+<td>Jornada partida</td>
+</tr>
+<tr>
+<td>ROTATIVO</td>
+<td>Turnos rotativos</td>
+</tr>
+<tr>
+<td>NOCHE</td>
+<td>Turno de noche</td>
+</tr>
+<tr>
+<td>FLEXIBLE</td>
+<td>Horario flexible</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>3. Flujo de Alertas de Contratacion</h2>
+<pre><code>CONTRATADO
+    |
+    +---&gt; ALERTA 1: Director RRHH
+    |     &quot;Nuevo contratado, completar datos&quot;
+    |
+    +---&gt; ALERTA 2: Hermi
+          &quot;Pendiente alta, esperar datos&quot;
+              |
+              v
+    Director RRHH completa:
+    - Categoria
+    - Horas
+    - Comienzo contrato
+    - Fin contrato
+              |
+              v
+         ALERTA 3: Hermi
+         &quot;Datos completos, tramitar alta&quot;
+              |
+              v
+         Hermi tramita alta SS
+         + completa tipo/codigo contrato
+              |
+              v
+         FLUJO FIRMA CONTRATO
+</code></pre>
+<hr />
+<h2>4. Firma de Contrato</h2>
+<h3>4.1 Flujo de Firma</h3>
+<pre><code>HERMI da de alta al trabajador en SS
+         |
+         v
++---------------------------+
+| ALERTA 4: Director RRHH   |
+| &quot;Contrato pendiente de    |
+|  firma: Manuel Perez&quot;     |
++---------------------------+
+         |
+         v
++---------------------------+
+| Director RRHH firma       |
+| (app web firma contratos) |
+| Estado: FIRMADO_EMPRESA   |
++---------------------------+
+         |
+         v
++---------------------------+
+| Se DESBLOQUEA firma       |
+| para el trabajador        |
++---------------------------+
+         |
+         v
++---------------------------+
+| ALERTA 5: Trabajador      |
+| &quot;Tienes un contrato       |
+|  pendiente de firmar&quot;     |
++---------------------------+
+         |
+         v
++---------------------------+
+| Trabajador firma          |
+| (app web firma contratos) |
+| Estado: FIRMADO_AMBOS     |
++---------------------------+
+         |
+         v
++---------------------------+
+| CONTRATO COMPLETADO       |
+| Notifica a Director RRHH  |
+| y a Hermi                 |
++---------------------------+
+</code></pre>
+<h3>4.2 Estados del Contrato</h3>
+<table>
+<thead>
+<tr>
+<th>Estado</th>
+<th>Descripcion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PENDIENTE_ALTA</td>
+<td>Esperando alta en SS por Hermi</td>
+</tr>
+<tr>
+<td>PENDIENTE_FIRMA_EMPRESA</td>
+<td>Alta realizada, pendiente firma Director RRHH</td>
+</tr>
+<tr>
+<td>FIRMADO_EMPRESA</td>
+<td>Director RRHH ha firmado, pendiente trabajador</td>
+</tr>
+<tr>
+<td>FIRMADO_AMBOS</td>
+<td>Contrato completado</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>5. Modificacion de Condiciones</h2>
+<h3>5.1 Condiciones que generan nuevo contrato/anexo</h3>
+<table>
+<thead>
+<tr>
+<th>Condicion</th>
+<th>Genera nuevo contrato</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cambio de categoria</td>
+<td>SI</td>
+</tr>
+<tr>
+<td>Cambio de jornada (horas)</td>
+<td>SI</td>
+</tr>
+</tbody>
+</table>
+<h3>5.2 Flujo Modificacion</h3>
+<pre><code>TRABAJADOR CON CONTRATO ACTIVO
+         |
+         v
++---------------------------+
+| Se modifica condicion:    |
+| - Cambio categoria        |
+| - Cambio jornada          |
++---------------------------+
+         |
+         v
++---------------------------+
+| Se genera NUEVA LINEA     |
+| en contratos del trabajador|
+| (Anexo/Novacion)          |
++---------------------------+
+         |
+         v
++---------------------------+
+| HERMI sube el documento   |
+| del nuevo contrato/anexo  |
++---------------------------+
+         |
+         v
++---------------------------+
+| Director RRHH FIRMA       |
+| (primero)                 |
++---------------------------+
+         |
+         v
++---------------------------+
+| Se DESBLOQUEA para        |
+| el trabajador             |
++---------------------------+
+         |
+         v
++---------------------------+
+| Trabajador FIRMA          |
+| (segundo)                 |
++---------------------------+
+         |
+         v
++---------------------------+
+| ANEXO COMPLETADO          |
+| Nueva linea activa        |
+| Anterior linea cerrada    |
++---------------------------+
+</code></pre>
+<hr />
+<h2>6. Historial de Contratos - Formato Visual</h2>
+<h3>6.1 Estructura de Columnas</h3>
+<table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Abrev.</th>
+<th>Descripcion</th>
+<th>Tipo BD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>#</td>
+<td>#</td>
+<td>Numero de linea secuencial</td>
+<td>INT</td>
+</tr>
+<tr>
+<td>Contrato Desde</td>
+<td>Cto Desde</td>
+<td>Fecha inicio del contrato original</td>
+<td>DATE</td>
+</tr>
+<tr>
+<td>Contrato Hasta</td>
+<td>Cto Hasta</td>
+<td>Fecha fin del contrato (- si indefinido)</td>
+<td>DATE NULL</td>
+</tr>
+<tr>
+<td>Categoria</td>
+<td>Cat</td>
+<td>Categoria profesional (T0, T1, etc.)</td>
+<td>VARCHAR</td>
+</tr>
+<tr>
+<td>Horas</td>
+<td>Hrs</td>
+<td>Horas semanales</td>
+<td>INT</td>
+</tr>
+<tr>
+<td>Codigo</td>
+<td>Cod</td>
+<td>Codigo de contrato</td>
+<td>VARCHAR</td>
+</tr>
+<tr>
+<td>Tipo</td>
+<td>Tipo</td>
+<td>Tipo: Temporal, Prorroga, Sustituc., Indefinido</td>
+<td>VARCHAR</td>
+</tr>
+<tr>
+<td>Sustitucion</td>
+<td>Sust</td>
+<td>Nombre persona sustituida (- si no aplica)</td>
+<td>VARCHAR</td>
+</tr>
+<tr>
+<td>Validez Desde</td>
+<td>Val Desde</td>
+<td>Fecha desde que aplica esta linea</td>
+<td>DATE</td>
+</tr>
+<tr>
+<td>Validez Hasta</td>
+<td>Val Hasta</td>
+<td>Fecha hasta que aplica esta linea</td>
+<td>DATE NULL</td>
+</tr>
+<tr>
+<td>Duracion Contrato</td>
+<td>Dur.Cto</td>
+<td>Duracion total del contrato actual</td>
+<td>VARCHAR</td>
+</tr>
+<tr>
+<td>Duracion Condicion</td>
+<td>Dur.Cond</td>
+<td>Duracion de las condiciones actuales</td>
+<td>VARCHAR</td>
+</tr>
+<tr>
+<td>Acciones</td>
+<td>Acciones</td>
+<td>Estado de firmas</td>
+<td>VARCHAR</td>
+</tr>
+</tbody>
+</table>
+<h3>6.2 Tipos de Contrato y Duracion</h3>
+<table>
+<thead>
+<tr>
+<th>Tipo</th>
+<th>Descripcion</th>
+<th>Dur.Cto</th>
+<th>Dur.Cond</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Temporal</strong></td>
+<td>Contrato temporal inicial</td>
+<td>Duracion inicial</td>
+<td>Tiempo con cond. actuales</td>
+</tr>
+<tr>
+<td><strong>Prorroga</strong></td>
+<td>Extension del contrato temporal</td>
+<td>Suma acumulada</td>
+<td>Tiempo con cond. actuales</td>
+</tr>
+<tr>
+<td><strong>Sustituc.</strong></td>
+<td>Contrato por sustitucion</td>
+<td>Tiempo desde inicio</td>
+<td>Tiempo con cond. actuales</td>
+</tr>
+<tr>
+<td><strong>Indefinido</strong></td>
+<td>Contrato indefinido</td>
+<td>Tiempo desde inicio</td>
+<td>Tiempo con cond. actuales</td>
+</tr>
+</tbody>
+</table>
+<h3>6.3 Ejemplo Visual (Fecha actual: 20/03/2027)</h3>
+<pre><code>┌───┬────────────┬────────────┬─────┬─────┬─────┬────────────┬───────────┬────────────┬────────────┬─────────┬──────────┬──────────┐
+│ # │ Cto Desde  │ Cto Hasta  │ Cat │ Hrs │ Cod │    Tipo    │   Sust    │ Val Desde  │ Val Hasta  │ Dur.Cto │ Dur.Cond │ Acciones │
+├───┼────────────┼────────────┼─────┼─────┼─────┼────────────┼───────────┼────────────┼────────────┼─────────┼──────────┼──────────┤
+│ 1 │ 01/12/2025 │ 28/02/2026 │ T0  │ 40  │ 100 │ Temporal   │ -         │ 01/12/2025 │ 31/01/2026 │ 3m      │ 2m       │ H D T    │
+│ 2 │ 01/12/2025 │ 28/02/2026 │ T1  │ 40  │ 100 │ Temporal   │ -         │ 01/02/2026 │ 14/02/2026 │ 3m      │ 14d      │ H D T    │
+│ 3 │ 01/12/2025 │ 28/02/2026 │ T1  │ 20  │ 100 │ Temporal   │ -         │ 15/02/2026 │ 28/02/2026 │ 3m      │ 14d      │ H D T    │
+│ 4 │ 01/12/2025 │ 31/05/2026 │ T1  │ 20  │ 100 │ Prorroga   │ -         │ 01/03/2026 │ 30/04/2026 │ 6m      │ 2m 14d   │ H D T    │
+│ 5 │ 01/12/2025 │ 31/05/2026 │ T1  │ 30  │ 100 │ Prorroga   │ -         │ 01/05/2026 │ 31/05/2026 │ 6m      │ 1m       │ H D T    │
+│ 6 │ 01/06/2026 │ 31/08/2026 │ T1  │ 30  │ 150 │ Sustituc.  │ A.Garcia  │ 01/06/2026 │ 31/08/2026 │ 3m      │ 3m       │ H D T    │
+│ 7 │ 01/09/2026 │ -          │ T1  │ 30  │ 200 │ Indefinido │ -         │ 01/09/2026 │ 19/02/2027 │ 5m 19d  │ 5m 19d   │ H D T    │
+│ 8 │ 01/09/2026 │ -          │ T3  │ 30  │ 200 │ Indefinido │ -         │ 20/02/2027 │ -          │ 6m 19d  │ 1m       │ H D -    │
+└───┴────────────┴────────────┴─────┴─────┴─────┴────────────┴───────────┴────────────┴────────────┴─────────┴──────────┴──────────┘
+</code></pre>
+<h3>6.4 Explicacion del Ejemplo</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Tipo</th>
+<th>Descripcion</th>
+<th>Dur.Cto</th>
+<th>Dur.Cond</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Temporal</td>
+<td>Contrato temporal inicial 3m, T0, 40h</td>
+<td>3m</td>
+<td>2m</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Temporal</td>
+<td>Modificacion categoria T0→T1 (mismo cto)</td>
+<td>3m</td>
+<td>14d</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Temporal</td>
+<td>Modificacion horas 40→20h (mismo cto)</td>
+<td>3m</td>
+<td>14d</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Prorroga</td>
+<td>+3m prorroga, mismas condiciones (T1, 20h)</td>
+<td>6m</td>
+<td>2m 14d</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Prorroga</td>
+<td>Modificacion horas 20→30h (dentro prorroga)</td>
+<td>6m</td>
+<td>1m</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Sustituc.</td>
+<td>Nuevo contrato sustitucion (reinicia Dur.Cto)</td>
+<td>3m</td>
+<td>3m</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Indefinido</td>
+<td>Nuevo contrato indefinido (reinicia Dur.Cto)</td>
+<td>5m 19d</td>
+<td>5m 19d</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Indefinido</td>
+<td>Modificacion categoria T1→T3 (pend. firma T)</td>
+<td>6m 19d</td>
+<td>1m</td>
+</tr>
+</tbody>
+</table>
+<h3>6.5 Estados de Acciones</h3>
+<table>
+<thead>
+<tr>
+<th>Icono</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H</td>
+<td>Hermi ha subido el documento</td>
+</tr>
+<tr>
+<td>D</td>
+<td>Director RRHH ha firmado</td>
+</tr>
+<tr>
+<td>T</td>
+<td>Trabajador ha firmado</td>
+</tr>
+<tr>
+<td>-</td>
+<td>Pendiente</td>
+</tr>
+</tbody>
+</table>
+<h3>6.6 Notas Importantes</h3>
+<ul>
+<li><strong>Dur.Cto</strong>: Se acumula en prorrogas (3m → 6m → 9m). Reinicia al cambiar modalidad (Temporal → Sustituc. → Indefinido)</li>
+<li><strong>Dur.Cond</strong>: Se calcula segun el tiempo con las condiciones actuales (Cat, Hrs, Cod). Reinicia si cambian</li>
+<li><strong>Prorrogas</strong>: Solo aplican a contratos Temporales. Cada prorroga genera una nueva linea</li>
+<li><strong>Sustitucion/Indefinido</strong>: No tienen prorrogas. La duracion se calcula desde el inicio del contrato</li>
+</ul>
+<hr />
+<h2>7. Alertas de Vencimiento de Contratos</h2>
+<h3>7.1 Flujo de Alertas</h3>
+<pre><code>CONTRATO TEMPORAL
+Fecha fin: 28/02/2026
+         |
+         v
+15 DIAS ANTES (13/02/2026)
+         |
+    +----+----+
+    |         |
+    v         v
+DASHBOARD   ALERTA EMAIL
+Director    Hermi
+RRHH
+         |
+         v
+&quot;Manuel Manuel expira el
+ contrato el dia 28/02/2026&quot;
+         |
+         v
++---------------------------+
+| ALERTAS RECURRENTES       |
+| Cada 2 dias a Hermi       |
+| hasta que se resuelva     |
++---------------------------+
+</code></pre>
+<h3>7.2 Estados del Contrato por Vencer</h3>
+<table>
+<thead>
+<tr>
+<th>Estado</th>
+<th>Descripcion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ACTIVO</td>
+<td>Contrato vigente, sin alertas</td>
+</tr>
+<tr>
+<td>PROXIMO_VENCER</td>
+<td>Menos de 15 dias, alertas activas</td>
+</tr>
+<tr>
+<td>PENDIENTE_DECISION</td>
+<td>Alerta enviada, esperando accion</td>
+</tr>
+<tr>
+<td>RENOVADO</td>
+<td>Nuevo contrato firmado, alertas detenidas</td>
+</tr>
+<tr>
+<td>FINALIZADO</td>
+<td>Contrato terminado, baja SS tramitada</td>
+</tr>
+<tr>
+<td>NO_RENOVADO</td>
+<td>Decision de no renovar, baja SS pendiente</td>
+</tr>
+</tbody>
+</table>
+<h3>7.3 Acciones Posibles</h3>
+<table>
+<thead>
+<tr>
+<th>Accion</th>
+<th>Descripcion</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Renovar</strong></td>
+<td>Crear nuevo contrato</td>
+<td>Nuevo flujo de firma, alertas detenidas</td>
+</tr>
+<tr>
+<td><strong>Finalizar</strong></td>
+<td>No renovar contrato</td>
+<td>Tramitar baja SS, alertas detenidas</td>
+</tr>
+<tr>
+<td><strong>Modificar</strong></td>
+<td>Cambiar condiciones</td>
+<td>Nuevo contrato con cambios</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>8. Documentacion del Empleado</h2>
+<h3>8.1 Documentos Obligatorios para TODOS</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Campo</th>
+<th>Descripcion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>DNI/NIE</td>
+<td>Documento escaneado</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Cuenta bancaria</td>
+<td>IBAN</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Numero de afiliacion (NAF)</td>
+<td>Seguridad Social</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Direccion</td>
+<td>Domicilio completo</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Telefono</td>
+<td>Movil de contacto</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Email</td>
+<td>Correo electronico</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Fecha de nacimiento</td>
+<td>DD/MM/AAAA</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Codigo postal</td>
+<td>CP</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Municipio</td>
+<td>Localidad</td>
+</tr>
+</tbody>
+</table>
+<h3>8.2 Carnets/Permisos (segun perfil)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Campo</th>
+<th>Obligatorio</th>
+<th>Condicion</th>
+<th>Validez</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10</td>
+<td>Carnet C (camion)</td>
+<td>No</td>
+<td>Opcional</td>
+<td>Si</td>
+</tr>
+<tr>
+<td>11</td>
+<td>CAP</td>
+<td>No</td>
+<td>Opcional (si tiene carnet C)</td>
+<td>Si</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Carnet carretillero</td>
+<td><strong>SI</strong></td>
+<td><strong>Obligatorio si perfil = LOGISTICA</strong></td>
+<td>Si</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Certificado de puntos</td>
+<td><strong>SI</strong></td>
+<td><strong>Obligatorio si usa vehiculo empresa</strong></td>
+<td>Si</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Tacografo</td>
+<td><strong>SI</strong></td>
+<td><strong>Obligatorio si usa vehiculo empresa</strong></td>
+<td>Si</td>
+</tr>
+</tbody>
+</table>
+<h3>8.3 Documentos de SALUD</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Documento</th>
+<th>Obligatorio</th>
+<th>Validez</th>
+<th>Dias aviso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>15</td>
+<td>Carnet Manipulador de Alimentos</td>
+<td><strong>SI</strong></td>
+<td>4 años</td>
+<td>60 dias</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Reconocimiento Medico</td>
+<td><strong>SI</strong></td>
+<td>1 año</td>
+<td>30 dias</td>
+</tr>
+</tbody>
+</table>
+<h3>8.4 Documentos a Firmar (independientes del contrato)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Documento</th>
+<th>Tipo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Proteccion de Datos</td>
+<td>Firma</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Usos de Imagenes</td>
+<td>Firma</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Formacion</td>
+<td>Firma</td>
+</tr>
+<tr>
+<td>4</td>
+<td>EPI (Equipos Proteccion Individual)</td>
+<td>Firma</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Informacion</td>
+<td>Firma</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Politica</td>
+<td>Firma</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Confidencialidad</td>
+<td>Firma</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Banco</td>
+<td>Firma</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Material</td>
+<td>Firma</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Protocolo Acoso</td>
+<td>Firma</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>9. Alertas de Caducidad de Documentos</h2>
+<h3>9.1 Dias de aviso por documento</h3>
+<table>
+<thead>
+<tr>
+<th>Documento</th>
+<th>Dias aviso antes de caducar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Carnet C</td>
+<td>30 dias</td>
+</tr>
+<tr>
+<td>CAP</td>
+<td>180 dias (6 meses)</td>
+</tr>
+<tr>
+<td>Carnet carretillero</td>
+<td>30 dias</td>
+</tr>
+<tr>
+<td>Certificado de puntos</td>
+<td>30 dias</td>
+</tr>
+<tr>
+<td>Tacografo</td>
+<td>28 dias</td>
+</tr>
+<tr>
+<td>Carnet Manipulador</td>
+<td>60 dias</td>
+</tr>
+<tr>
+<td>Reconocimiento Medico</td>
+<td>30 dias</td>
+</tr>
+</tbody>
+</table>
+<h3>9.2 Dashboard Alertas</h3>
+<pre><code>+============================================================================+
+|  ALERTAS CADUCIDAD PERMISOS - Director RRHH                                |
++============================================================================+
+|                                                                             |
+|  [!] PROXIMOS A CADUCAR (30 dias)                                          |
+|  +------------------------------------------+------------------+---------+ |
+|  | Trabajador        | Documento            | Caduca           | Dias    | |
+|  +------------------------------------------+------------------+---------+ |
+|  | Juan Lopez        | Carnet C             | 15/03/2026       | 25      | |
+|  | Pedro Garcia      | CAP                  | 20/03/2026       | 30      | |
+|  | Ana Martinez      | Tacografo            | 18/03/2026       | 28      | |
+|  +------------------------------------------+------------------+---------+ |
+|                                                                             |
+|  [X] CADUCADOS                                                             |
+|  +------------------------------------------+------------------+---------+ |
+|  | Carlos Ruiz       | Carnet carretillero  | 10/02/2026       | -8      | |
+|  +------------------------------------------+------------------+---------+ |
+|                                                                             |
++============================================================================+
+</code></pre>
+<hr />
+<h2>10. Procedimiento SQL: Contratar Candidato</h2>
+<pre><code class="language-sql">CALL sp_contratar_candidato(
+    p_candidato_id,           -- ID del candidato
+    p_id_empresa,             -- Empresa (ej: '001')
+    p_categoria_profesional_id, -- Categoria
+    p_horas_semana,           -- Horas/semana
+    p_tcontrato,              -- Tipo contrato
+    p_dias,                   -- Dias trabajo
+    p_horario,                -- Horario
+    @operador_id,             -- OUT: ID operador creado
+    @contrato_id              -- OUT: ID contrato creado
+);
+</code></pre>
+<hr />
+<p><em>Documento generado: ModuloRRHH v1.0</em></p>
+
+    <div class="fecha-generacion">
+        Generado: 19/02/2026 06:35
+    </div>
+</body>
+</html>
