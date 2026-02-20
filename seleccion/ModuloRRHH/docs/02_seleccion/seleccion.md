@@ -370,65 +370,342 @@ LLAMADOR marca DUDA
 
 ## 5. Sistema de Codigos (Gaming)
 
-### 5.1 Flujo
+### 5.1 Flujo de Acceso
 
 ```
-Entrega Codigos (entrevista)
+Entrega Codigos (1a entrevista)
+         |
+         v
++------------------------------------------+
+|  SISTEMA GENERA ID CANDIDATO             |
+|  Ej: CAND-12345                          |
++------------------------------------------+
          |
          v
 +------------------------------------------+
 |  EMAIL AUTOMATICO AL CANDIDATO           |
-|  Enlace para registrarse y acceder       |
-|  al sistema de codigos                   |
+|  - ID Candidato                          |
+|  - Enlace al sistema                     |
+|  - Instrucciones                         |
 +------------------------------------------+
          |
          v
 +------------------------------------------+
-|  CANDIDATO SE REGISTRA                   |
-|  - Introduce sus datos                   |
-|  - Accede al sistema de codigos          |
+|  PANTALLA: REGISTRO                      |
+|  - Introduce ID Candidato                |
+|  - Completa datos personales             |
+|  - Crea contraseña                       |
++------------------------------------------+
+         |
+         v
++------------------------------------------+
+|  PANTALLA: LOGIN                         |
+|  - ID o Email + Contraseña               |
+|  - Recuperar contraseña (via email)      |
 +------------------------------------------+
          |
          v
 +------------------------------------------+
 |  SISTEMA GAMING - APRENDER CODIGOS       |
+|  Por familias de productos               |
 +------------------------------------------+
 ```
 
-### 5.2 Pantalla del Juego
+### 5.2 Campos de Registro del Candidato
+
+| Campo | Obligatorio | Descripcion |
+|-------|-------------|-------------|
+| ID Candidato | Si | El que recibe en el email |
+| Nombre | Si | Nombre |
+| Apellido 1 | Si | Primer apellido |
+| Apellido 2 | Si | Segundo apellido |
+| Email | Si | Para recuperar contraseña |
+| Telefono | Si | Contacto |
+| Contraseña | Si | Minimo 6 caracteres |
+| Repetir contraseña | Si | Confirmacion |
+
+### 5.3 Pantalla del Juego - Practica por Familias
 
 ```
 +============================================+
 |  CODIGOS - Adela Ruano                    |
 +============================================+
 |                                            |
-|  MODO PRACTICA                             |
+|  PROGRESO POR FAMILIAS                     |
+|  ├── CHICO ENTERO ........ 85% [ ]        |
+|  ├── CHICO LIMPIO ........ 92% [✓]        |
+|  ├── MARISCO CRUDO ....... 90% [✓]        |
+|  ├── PLANOS .............. 78% [ ]        |
+|  └── CEFALOPODO .......... 95% [✓]        |
 |                                            |
-|  Codigo: 90                                |
+|  [✓] = Verde (>= 90%)                      |
+|  [ ] = Gris (< 90%)                        |
+|                                            |
++============================================+
+|                                            |
+|  MODO PRACTICA - CHICO ENTERO              |
+|                                            |
+|  Codigo: 16                                |
 |                                            |
 |  Cual es?                                  |
 |                                            |
-|  [ ] Lomo de Salmon                        |
-|  [x] Rodajas de Salmon  -> Correcto!       |
-|  [ ] Boquerones                            |
+|  [ ] Acedias                               |
+|  [x] Boquerones  -> Correcto!              |
+|  [ ] Sardinas                              |
 |                                            |
-|  Racha: 5 seguidas                         |
-|  Aciertos hoy: 45/50 (90%)                 |
+|  Aciertos familia: 45/53 (85%)             |
 |                                            |
 +============================================+
 ```
 
+### 5.4 Progreso y Prueba Final
+
+#### Requisitos para Prueba Final
+
+| Requisito | Valor |
+|-----------|-------|
+| Progreso minimo por familia | 90% de aciertos |
+| Condicion para activar prueba | TODAS las familias en verde (>= 90%) |
+
+#### Prueba Final
+
+| Elemento | Valor |
+|----------|-------|
+| Numero de preguntas | 10 codigos aleatorios |
+| Minimo para aprobar | 7 aciertos (70%) |
+| Resultado APROBADO | Estado = "Codigos Completado" |
+| Resultado SUSPENDIDO | Vuelve a practicar |
+
+#### Flujo del Sistema Gaming
+
+```
+PRACTICA POR FAMILIAS
+         |
+         v
++---------------------------+
+| ¿Todas familias >= 90%?   |
++---------------------------+
+         |
+    NO --+-- SI
+    |        |
+    v        v
+ Seguir   PRUEBA FINAL (10 codigos)
+practicar    |
+        +----+----+
+        |         |
+     >= 7       < 7
+    APROBADO  SUSPENDIDO
+        |         |
+        v         v
+  "CODIGOS      Vuelve a
+  COMPLETADO"   practicar
+        |
+        v
+  Pendiente llamar 2a Entrevista
+```
+
+#### Estados en Pantalla CODIGOS (ERP)
+
+| Estado | Significado |
+|--------|-------------|
+| En Progreso | Practicando familias |
+| Prueba Disponible | Todas familias >= 90% |
+| Codigos Completado | Aprobo prueba, pendiente decision |
+
+#### Alerta Automatica - Codigos Completado
+
+**Trigger:** Candidato aprueba examen (>= 7/10)
+
+**Destinatarios:** Entrevistador, Director RRHH
+
+**Mensaje:**
+```
+Manuel Perez se sabe los codigos
+```
+
+#### Accion Post-Examen
+
+Cuando aprueba, se desbloquea accion Si/No:
+
+| Candidato | Estado | Accion | Nota |
+|-----------|--------|--------|------|
+| Manuel Perez | Codigos Completado | [ Si / No ] | queda martes 12/02 a las 10:30 |
+
+| Opcion | Resultado |
+|--------|-----------|
+| SI | Llamar para 2a Entrevista/Contratacion |
+| NO | Va a DESCARTADOS |
+
+#### Flujo Post-Examen
+
+```
+APRUEBA EXAMEN (>= 7/10)
+         |
+         +---> ALERTA: "Manuel Perez se sabe los codigos"
+         |
+         v
+PANTALLA CODIGOS: Accion [ Si / No ]
+         |
+         v (Si + Nota)
+MENU: Segunda Entrevista / Contratacion
+```
+
+### 5.5 Pantalla ERP - Lista de Candidatos en Codigos
+
+| Campo | Editable | Descripcion |
+|-------|----------|-------------|
+| Candidato | No | Nombre y apellido |
+| Perfil | No | Perfil del puesto |
+| Fecha 1a entrevista | No | Fecha de la primera entrevista |
+| Notas entrevista | No | Comentarios del entrevistador |
+| Codigos hechos | No | Numero de codigos completados (ej: 45/120) |
+| Aciertos | No | Porcentaje de aciertos |
+| **Comentario** | Si | Indicaciones para el llamador |
+| **Estado** | Si | En Progreso / Llamar |
+
+### 5.6 Desplegable: Estado
+
+| Opcion | Resultado |
+|--------|-----------|
+| EN PROGRESO | Se queda en CODIGOS |
+| LLAMAR | Aparece en Dashboard Llamador para llamar y decidir 2a entrevista |
+
+### 5.7 Cuando Estado = Llamar
+
+| Campo | Editable | Descripcion |
+|-------|----------|-------------|
+| **Resultado** | Si | Desplegable: Si (pasa a 2a entrevista) / No (descartado) |
+
+### 5.8 Vista Ejemplo
+
+| Candidato | Perfil | Fecha 1a | Notas Entrevista | Codigos | Aciertos | Comentario | Estado |
+|-----------|--------|----------|------------------|---------|----------|------------|--------|
+| Manuel Perez | PESCADERIA | 10/02/2026 | Muy motivado | 120/120 | 88% | Intenta quedar miercoles 12:30 | Llamar |
+| Adela Ruano | PESCADERIA | 15/02/2026 | Experiencia 20 años | 45/120 | 90% | | En Progreso |
+
+### 5.9 Fuente de Datos - Servidor ERP
+
+**Servidor:** gestion.pescadoslacarihuela.es
+
+#### Tablas del Servidor
+
+| Tabla | Uso | Campos Clave |
+|-------|-----|--------------|
+| `articulos` | Productos | codigo, nombre, familia_id |
+| `familias` | Familias de productos | id, nombre |
+| `v2_facturas_tickets_lineas` | Ventas | IdArticulo, created_at |
+
+#### Familias de Productos
+
+| ID | Familia |
+|----|---------|
+| 13 | CHICO ENTERO |
+| 14 | CHICO LIMPIO |
+| 18 | MARISCO CRUDO |
+| 19 | MARISCO COCIDO |
+| 21 | CEFALOPODO |
+| 29 | MERLUZA |
+| 31 | PLANOS |
+| 32 | RAPE |
+
+#### Ejemplos de Articulos
+
+| Codigo | Nombre | Familia |
+|--------|--------|---------|
+| 1 | ACEDIAS | CHICO ENTERO |
+| 16 | BOQUERONES | CHICO ENTERO |
+| 60 | LENGUADO | PLANOS |
+| 120 | LENGUADOS | PLANOS |
+| 160 | URTA | RESTO HORNO |
+
+#### Filtro de Productos Activos (Ultimos 3 Meses)
+
+Solo se muestran los articulos con ventas en los ultimos 3 meses.
+
+```sql
+SELECT DISTINCT a.codigo, a.nombre, f.nombre as familia
+FROM articulos a
+JOIN familias f ON a.familia_id = f.id
+JOIN v2_facturas_tickets_lineas v ON v.IdArticulo = a.id
+WHERE v.created_at >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
+```
+
 ---
 
-## 6. Tercera Fase: SEGUNDA ENTREVISTA
+## 6. Tercera Fase: SEGUNDA ENTREVISTA / CONTRATACION
 
-### 6.1 Resultados
+### 6.1 Acceso
 
-| Opcion | Accion |
-|--------|--------|
-| Contratado | Pasa a CONTRATADOS (fin proceso) |
-| Duda | Se queda en ENTREVISTAS con comentarios |
-| No | Descartado con motivo |
+**Menu:** Segunda Entrevista / Contratacion
+
+### 6.2 Resultados
+
+| Opcion | Email Automatico | Destino |
+|--------|------------------|---------|
+| SI (Contratado) | Email Bienvenida + acceso sistema | CONTRATADOS |
+| DUDA | - | Se queda en ENTREVISTAS |
+| NO | Email Agradecimiento | DESCARTADOS |
+
+### 6.3 Email SI (Contratado)
+
+```
+Asunto: Bienvenido a La Carihuela
+
+Bienvenido a La Carihuela. Estamos muy felices de que puedas
+formar parte de nuestra empresa.
+
+Usuario: [ID_CANDIDATO]
+Contraseña: [ENLACE_CREAR_CONTRASEÑA]
+```
+
+### 6.4 Email NO (No Contratado)
+
+```
+Asunto: Agradecimiento por su participacion
+
+Queremos agradecerle sinceramente su participacion...
+Lamentamos comunicarle que en esta ocasion no ha sido posible
+contar con usted para incorporarse a nuestro equipo.
+```
+
+### 6.5 Flujo 2a Entrevista
+
+```
+2a ENTREVISTA
+     |
+     +-- SI --> EMAIL BIENVENIDA --> CONTRATADOS
+     |          (Usuario + Contraseña)
+     |
+     +-- DUDA --> QUEDA EN ENTREVISTAS
+     |
+     +-- NO --> EMAIL AGRADECIMIENTO --> DESCARTADOS
+```
+
+### 6.6 Alta en Portal de Trabajadores
+
+Cuando el candidato es contratado, se da de alta en la tabla `operadores`.
+
+**Asignacion de ID:**
+- Se busca el primer ID libre desde 1
+- Si hay huecos, se reutilizan
+- Ejemplo: IDs [1,2,_,4] → Asigna 3
+
+**Flujo:**
+```
+CONTRATADO
+     |
+     v
+Buscar primer ID libre >= 1
+     |
+     v
+Crear registro en operadores
+     |
+     v
+EMAIL: Usuario = ID + Enlace crear contraseña
+     |
+     v
+Trabajador accede al portal
+```
 
 ---
 

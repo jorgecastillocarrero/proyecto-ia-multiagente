@@ -277,7 +277,7 @@ ENTREVISTAS
 
 ### 4.1 Descripcion
 
-Pantalla del sistema gaming para aprender codigos de productos.
+Pantalla del sistema gaming para aprender codigos de productos. Muestra informacion de la 1a entrevista y estadisticas de progreso.
 
 ### 4.2 Campos - Lista de Candidatos en Codigos
 
@@ -285,25 +285,49 @@ Pantalla del sistema gaming para aprender codigos de productos.
 |-------|----------|-------------|
 | Candidato | No | Nombre y apellido |
 | Perfil | No | Perfil del puesto |
-| Fecha inicio | No | Cuando recibio acceso |
-| Progreso | No | Porcentaje completado |
+| Fecha 1a entrevista | No | Fecha de la primera entrevista |
+| Notas entrevista | No | Comentarios del entrevistador |
+| Codigos hechos | No | Numero de codigos completados (ej: 45/120) |
 | Aciertos | No | Porcentaje de aciertos |
-| Ultimo acceso | No | Fecha ultima sesion |
-| **Estado** | Si | Completado / Pendiente |
+| **Comentario** | Si | Indicaciones para el llamador |
+| **Estado** | Si | En Progreso / Llamar |
 
 ### 4.3 Desplegable: Estado
 
 | Opcion | Resultado |
 |--------|-----------|
-| COMPLETADO | Pasa a LLAMADAS (2a Entrevista) |
-| PENDIENTE | Se queda en CODIGOS |
+| EN PROGRESO | Se queda en CODIGOS |
+| LLAMAR | Aparece en Dashboard Llamador para llamar y decidir 2a entrevista |
 
-### 4.4 Dashboard - Contador
+### 4.4 Cuando Estado = Llamar
+
+Aparece campo adicional:
+
+| Campo | Editable | Descripcion |
+|-------|----------|-------------|
+| **Resultado** | Si | Desplegable de decision final |
+
+### 4.5 Desplegable: Resultado (cuando Estado = Llamar)
+
+| Opcion | Resultado |
+|--------|-----------|
+| SI | Pasa a LLAMADAS (2a Entrevista) |
+| NO | Va a DESCARTADOS |
+
+### 4.6 Vista Ejemplo - Candidatos en Codigos
+
+| Candidato | Perfil | Fecha 1a | Notas Entrevista | Codigos | Aciertos | Comentario | Estado |
+|-----------|--------|----------|------------------|---------|----------|------------|--------|
+| Manuel Perez | PESCADERIA | 10/02/2026 | Muy motivado | 120/120 | 88% | Intenta quedar miercoles 12:30 | Llamar |
+| Adela Ruano | PESCADERIA | 15/02/2026 | Experiencia 20 años | 45/120 | 90% | | En Progreso |
+| Angel Garcia | LOGISTICA | 12/02/2026 | Disponibilidad inmediata | 80/120 | 75% | | En Progreso |
+
+### 4.7 Dashboard - Contador
 
 ```
 CODIGOS
-├── En progreso: 5
-└── Completados (pendiente 2a): 2
+├── En Progreso: 2
+└── Llamar: 1
 ```
 
 ---
@@ -978,34 +1002,72 @@ LLAMADOR marca DUDA
 
 ## 5. Sistema de Codigos (Gaming)
 
-### 5.1 Flujo
+### 5.1 Flujo de Acceso
 
 ```
-Entrega Codigos (entrevista)
+Entrega Codigos (1a entrevista)
+         |
+         v
++------------------------------------------+
+|  SISTEMA GENERA ID CANDIDATO             |
+|  Ej: CAND-12345                          |
++------------------------------------------+
          |
          v
 +------------------------------------------+
 |  EMAIL AUTOMATICO AL CANDIDATO           |
-|  Enlace para registrarse y acceder       |
-|  al sistema de codigos                   |
+|  - ID Candidato                          |
+|  - Enlace al sistema                     |
+|  - Instrucciones                         |
 +------------------------------------------+
          |
          v
 +------------------------------------------+
-|  CANDIDATO SE REGISTRA                   |
-|  - Introduce sus datos                   |
-|  - Accede al sistema de codigos          |
+|  PANTALLA: REGISTRO                      |
+|  - Introduce ID Candidato                |
+|  - Completa datos personales             |
+|  - Crea contraseña                       |
++------------------------------------------+
+         |
+         v
++------------------------------------------+
+|  PANTALLA: LOGIN                         |
+|  - ID o Email + Contraseña               |
+|  - Recuperar contraseña (via email)      |
 +------------------------------------------+
          |
          v
 +------------------------------------------+
 |  SISTEMA GAMING - APRENDER CODIGOS       |
+|  Por familias de productos               |
 +------------------------------------------+
 ```
 
-### 5.2 Emails Automaticos del Proceso de Entrevistas
+### 5.2 Campos de Registro del Candidato
 
-#### 5.2.1 Email: Entrega de Codigos (Candidato Seleccionado)
+| Campo | Obligatorio | Descripcion |
+|-------|-------------|-------------|
+| ID Candidato | Si | El que recibe en el email |
+| Nombre | Si | Nombre |
+| Apellido 1 | Si | Primer apellido |
+| Apellido 2 | Si | Segundo apellido |
+| Email | Si | Para recuperar contraseña |
+| Telefono | Si | Contacto |
+| Contraseña | Si | Minimo 6 caracteres |
+| Repetir contraseña | Si | Confirmacion |
+
+### 5.3 Recuperacion de Contraseña
+
+| Paso | Accion |
+|------|--------|
+| 1 | Candidato pulsa "Olvide mi contraseña" |
+| 2 | Introduce su email |
+| 3 | Sistema envia enlace de recuperacion |
+| 4 | Candidato crea nueva contraseña |
+
+### 5.4 Emails Automaticos del Proceso de Entrevistas
+
+#### 5.4.1 Email: Entrega de Codigos (Candidato Seleccionado)
 
 **Trigger:** Entrevistador marca "Entrega Codigos" en la entrevista
 
@@ -1021,6 +1083,8 @@ Gracias por participar en el proceso de seleccion para el puesto de
 
 Nos complace informarle que ha superado la entrevista y le damos
 la bienvenida a nuestro equipo.
+
+Su ID de candidato es: [ID_CANDIDATO]
 
 A continuacion le facilitamos el enlace para acceder al sistema
 de aprendizaje de codigos de productos:
@@ -1038,7 +1102,7 @@ Departamento de Recursos Humanos
 La Carihuela Gestion de Pescaderias SL
 ```
 
-#### 5.2.2 Email: Rechazo tras Entrevista
+#### 5.4.2 Email: Rechazo tras Entrevista
 
 **Trigger:** Entrevistador marca "No" en la 1a o 2a entrevista
 
@@ -1071,7 +1135,7 @@ Departamento de Recursos Humanos
 La Carihuela Gestion de Pescaderias SL
 ```
 
-### 5.3 Tareas de Programacion
+### 5.5 Tareas de Programacion
 
 | ID | Tarea | Trigger | Condicion | Descripcion | Estado |
 |----|-------|---------|-----------|-------------|--------|
@@ -1084,48 +1148,544 @@ La Carihuela Gestion de Pescaderias SL
 
 **Documento completo:** Ver `docs/TAREAS_AUTOMATIZACION.md`
 
-### 5.4 Variables de Plantilla
+### 5.6 Variables de Plantilla
 
 | Variable | Descripcion | Origen |
 |----------|-------------|--------|
 | [APELLIDO] | Apellido del candidato | candidatos.apellido |
 | [POSICION] | Titulo del puesto | peticiones_trabajador.posicion |
+| [ID_CANDIDATO] | ID unico del candidato | Sistema genera automaticamente |
 | [ENLACE_SISTEMA_CODIGOS] | URL del sistema gaming | Configuracion sistema |
 
-### 5.5 Pantalla del Juego
+### 5.7 Pantalla del Juego - Practica por Familias
 
 ```
 +============================================+
 |  CODIGOS - Adela Ruano                    |
 +============================================+
 |                                            |
-|  MODO PRACTICA                             |
+|  PROGRESO POR FAMILIAS                     |
+|  ├── CHICO ENTERO ........ 85% [ ]        |
+|  ├── CHICO LIMPIO ........ 92% [✓]        |
+|  ├── MARISCO CRUDO ....... 90% [✓]        |
+|  ├── PLANOS .............. 78% [ ]        |
+|  └── CEFALOPODO .......... 95% [✓]        |
 |                                            |
-|  Codigo: 90                                |
+|  [✓] = Verde (>= 90%)                      |
+|  [ ] = Gris (< 90%)                        |
+|                                            |
++============================================+
+|                                            |
+|  MODO PRACTICA - CHICO ENTERO              |
+|                                            |
+|  Codigo: 16                                |
 |                                            |
 |  Cual es?                                  |
 |                                            |
-|  [ ] Lomo de Salmon                        |
-|  [x] Rodajas de Salmon  -> Correcto!       |
-|  [ ] Boquerones                            |
+|  [ ] Acedias                               |
+|  [x] Boquerones  -> Correcto!              |
+|  [ ] Sardinas                              |
 |                                            |
 |  Racha: 5 seguidas                         |
-|  Aciertos hoy: 45/50 (90%)                 |
+|  Aciertos familia: 45/53 (85%)             |
 |                                            |
 +============================================+
 ```
 
+### 5.8 Progreso y Prueba Final
+
+#### 5.8.1 Requisitos para Prueba Final
+
+| Requisito | Valor |
+|-----------|-------|
+| Progreso minimo por familia | 90% de aciertos |
+| Condicion para activar prueba | TODAS las familias en verde (>= 90%) |
+
+#### 5.8.2 Prueba Final
+
+| Elemento | Valor |
+|----------|-------|
+| Numero de preguntas | 10 codigos aleatorios |
+| Minimo para aprobar | 7 aciertos (70%) |
+| Resultado APROBADO | Estado = "Codigos Completado" |
+| Resultado SUSPENDIDO | Vuelve a practicar |
+
+#### 5.8.3 Flujo Completo del Sistema Gaming
+
+```
+PRACTICA POR FAMILIAS
+         |
+         v
++---------------------------+
+| ¿Todas familias >= 90%?   |
++---------------------------+
+         |
+    NO --+-- SI
+    |        |
+    v        v
+ Seguir   PRUEBA FINAL
+practicar (10 codigos)
+             |
+        +----+----+
+        |         |
+     >= 7       < 7
+    APROBADO  SUSPENDIDO
+        |         |
+        v         v
+  "CODIGOS      Vuelve a
+  COMPLETADO"   practicar
+        |
+        v
+  Pendiente llamar
+  para 2a Entrevista
+```
+
+#### 5.8.4 Estados en Pantalla CODIGOS (ERP)
+
+| Estado | Significado | Color |
+|--------|-------------|-------|
+| En Progreso | Practicando familias | - |
+| Prueba Disponible | Todas familias >= 90%, puede hacer prueba | - |
+| Codigos Completado | Aprobo prueba, pendiente decision | Verde |
+
+#### 5.8.5 Alerta Automatica - Codigos Completado
+
+**Trigger:** Candidato aprueba examen de codigos (>= 7/10)
+
+**Destinatarios:**
+- Entrevistador
+- Director RRHH
+
+**Mensaje de alerta:**
+```
+[NOMBRE APELLIDO] se sabe los codigos
+```
+
+**Ejemplo:**
+```
+Manuel Perez se sabe los codigos
+```
+
+#### 5.8.6 Accion Post-Examen en Pantalla CODIGOS
+
+Cuando el candidato aprueba el examen, se desbloquea la accion Si/No:
+
+**Vista en Pantalla CODIGOS:**
+
+| Candidato | Codigos | Aciertos | Estado | Accion | Nota |
+|-----------|---------|----------|--------|--------|------|
+| Manuel Perez | 120/120 | 88% | Codigos Completado | [ v ] | [ ] |
+
+**Desplegable Accion:**
+
+| Opcion | Resultado |
+|--------|-----------|
+| SI | Llamar para 2a Entrevista/Contratacion + Campo Nota |
+| NO | Va a DESCARTADOS |
+
+**Campo Nota (cuando marca Si):**
+
+Indicaciones para la cita, ejemplo:
+```
+queda mañana martes 12/02 a las 10:30
+```
+
+#### 5.8.7 Flujo Completo Post-Examen
+
+```
+CANDIDATO APRUEBA EXAMEN (>= 7/10)
+         |
+         +--------> ALERTA AUTOMATICA
+         |          Para: Entrevistador + Director RRHH
+         |          "Manuel Perez se sabe los codigos"
+         |
+         v
+PANTALLA CODIGOS (ERP)
+Estado: "Codigos Completado"
+Accion: [ Si / No ] (desbloqueado)
+         |
+         v
+SELECCIONADOR marca "Si" + Nota
+"queda mañana martes 12/02 a las 10:30"
+         |
+         v
+MENU: Segunda Entrevista / Contratacion
+         |
+         v
+2a ENTREVISTA + CONTRATACION
+```
+
+### 5.9 Fuente de Datos - Servidor ERP
+
+**Servidor:** gestion.pescadoslacarihuela.es
+
+#### 5.9.1 Tablas del Servidor
+
+| Tabla | Uso | Campos Clave |
+|-------|-----|--------------|
+| `articulos` | Productos | codigo, nombre, familia_id |
+| `familias` | Familias de productos | id, nombre |
+| `v2_facturas_tickets_lineas` | Ventas | IdArticulo, created_at |
+
+#### 5.9.2 Familias de Productos
+
+| ID | Familia |
+|----|---------|
+| 13 | CHICO ENTERO |
+| 14 | CHICO LIMPIO |
+| 18 | MARISCO CRUDO |
+| 19 | MARISCO COCIDO |
+| 21 | CEFALOPODO |
+| 24 | BACALAO |
+| 29 | MERLUZA |
+| 31 | PLANOS |
+| 32 | RAPE |
+
+#### 5.9.3 Ejemplos de Articulos
+
+| Codigo | Nombre | Familia |
+|--------|--------|---------|
+| 1 | ACEDIAS | CHICO ENTERO |
+| 16 | BOQUERONES | CHICO ENTERO |
+| 60 | LENGUADO | PLANOS |
+| 120 | LENGUADOS | PLANOS |
+| 160 | URTA | RESTO HORNO |
+
+#### 5.9.4 Filtro de Productos Activos (Ultimos 3 Meses)
+
+Solo se muestran en el juego los articulos que han tenido ventas en los ultimos 3 meses.
+
+**Consulta SQL:**
+
+```sql
+SELECT DISTINCT a.codigo, a.nombre, f.nombre as familia
+FROM articulos a
+JOIN familias f ON a.familia_id = f.id
+JOIN v2_facturas_tickets_lineas v ON v.IdArticulo = a.id
+WHERE v.created_at >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
+ORDER BY f.nombre, a.nombre
+```
+
+**Logica:**
+
+| Condicion | Resultado |
+|-----------|-----------|
+| Articulo vendido en ultimos 3 meses | Aparece en el sistema gaming |
+| Articulo sin ventas en 3 meses | No aparece (producto inactivo) |
+
 ---
 
-## 6. Tercera Fase: SEGUNDA ENTREVISTA
+## 6. Tercera Fase: SEGUNDA ENTREVISTA / CONTRATACION
 
-### 6.1 Resultados
+### 6.1 Acceso
 
-| Opcion | Accion |
-|--------|--------|
-| Contratado | Pasa a CONTRATADOS (fin proceso) |
-| Duda | Se queda en ENTREVISTAS con comentarios |
-| No | Descartado con motivo |
+**Menu:** Segunda Entrevista / Contratacion
+
+### 6.2 Resultados
+
+| Opcion | Email Automatico | Destino |
+|--------|------------------|---------|
+| SI (Contratado) | Email Bienvenida + acceso sistema | CONTRATADOS |
+| DUDA | - | Se queda en ENTREVISTAS |
+| NO | Email Agradecimiento | DESCARTADOS |
+
+### 6.3 Email Automatico - SI (Contratado)
+
+**Trigger:** 2a Entrevista marca "Si"
+
+**Plantilla:**
+
+```
+Asunto: Bienvenido a La Carihuela
+
+Estimado/a [NOMBRE] [APELLIDO]:
+
+Bienvenido a La Carihuela. Estamos muy felices de que puedas
+formar parte de nuestra empresa.
+
+Para acceder al sistema, utilice los siguientes datos:
+
+Usuario: [ID_CANDIDATO]
+Contraseña: Puede establecerla en el siguiente enlace:
+[ENLACE_CREAR_CONTRASEÑA]
+
+Introduzca su nueva contraseña dos veces para confirmarla.
+
+Si tiene alguna duda, contacte con nosotros en:
+seleccion@pescadoslacarihuela.es
+
+Atentamente,
+Departamento de Recursos Humanos
+La Carihuela Gestion de Pescaderias SL
+```
+
+### 6.4 Email Automatico - NO (No Contratado)
+
+**Trigger:** 2a Entrevista marca "No"
+
+**Plantilla:**
+
+```
+Asunto: Agradecimiento por su participacion
+
+Estimado/a [NOMBRE] [APELLIDO]:
+
+Queremos agradecerle sinceramente su participacion en nuestro
+proceso de seleccion para el puesto de [POSICION].
+
+Lamentamos comunicarle que en esta ocasion no ha sido posible
+contar con usted para incorporarse a nuestro equipo.
+
+Le animamos a seguir atento a nuestras futuras ofertas de empleo.
+
+Gracias por su tiempo e interes en La Carihuela.
+
+Atentamente,
+Departamento de Recursos Humanos
+La Carihuela Gestion de Pescaderias SL
+```
+
+### 6.5 Flujo 2a Entrevista / Contratacion
+
+```
+MENU: Segunda Entrevista / Contratacion
+         |
+         v
++---------------------------+
+|    RESULTADO 2a ENTREV    |
++---------------------------+
+         |
+    +----+----+----+
+    |    |        |
+   SI   DUDA      NO
+    |    |        |
+    v    v        v
++-------+ +------+ +------------------+
+| EMAIL | | QUEDA| | EMAIL            |
+| BIENV.| | ENTR.| | AGRADECIMIENTO   |
++-------+ +------+ +------------------+
+    |              |
+    v              v
+CONTRATADOS    DESCARTADOS
+    |
+    v
+Acceso sistema:
+- Usuario: ID_CANDIDATO
+- Crear contraseña
+```
+
+### 6.6 Variables de Plantilla - 2a Entrevista
+
+| Variable | Descripcion | Origen |
+|----------|-------------|--------|
+| [NOMBRE] | Nombre del candidato | candidatos.nombre |
+| [APELLIDO] | Apellido del candidato | candidatos.apellido |
+| [ID_CANDIDATO] | ID unico del candidato | Sistema |
+| [POSICION] | Titulo del puesto | peticiones_trabajador.posicion |
+| [ENLACE_CREAR_CONTRASEÑA] | URL para crear contraseña | Configuracion sistema |
+
+### 6.7 Alta en Sistema - Tabla operadores
+
+Cuando el candidato es contratado (2a Entrevista = Si), se da de alta en el portal de trabajadores.
+
+#### 6.7.1 Portal de Trabajadores
+
+**Tabla:** `operadores`
+**Servidor:** gestion.pescadoslacarihuela.es
+
+#### 6.7.2 Asignacion de ID
+
+El sistema asigna automaticamente el primer ID libre desde 1:
+
+```
+Buscar primer ID libre desde 1
+         |
+         v
+Ejemplo: IDs [_,2,_,_,5,6,...]
+         |
+         v
+Asigna ID = 1 (primer hueco libre)
+         |
+         v
+Insertar en tabla operadores
+```
+
+**Regla:** Si hay huecos en la numeracion, se reutilizan (ej: si entre 10 y 12 falta el 11, se asigna 11)
+
+#### 6.7.3 Campos Principales - Tabla operadores
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| id | int | ID unico del trabajador (asignado automaticamente) |
+| Nombre | char(30) | Nombre |
+| Apellido1 | char(15) | Primer apellido |
+| Apellido2 | char(15) | Segundo apellido |
+| Nif | varchar(255) | DNI/NIE |
+| email | varchar(255) | Correo electronico |
+| telefono | varchar(255) | Telefono |
+| login | varchar(255) | Usuario de acceso |
+| password_laravel | varchar(255) | Contraseña encriptada |
+| Direccion | varchar(100) | Direccion |
+| Poblacion | varchar(50) | Ciudad |
+| Provincia | varchar(50) | Provincia |
+| Cp | char(5) | Codigo postal |
+| fecha_nacimiento | date | Fecha de nacimiento |
+| NAF | char(12) | Numero Afiliacion SS |
+| categoria_profesional_id | int | FK categoria profesional |
+| idtienda | int | Tienda asignada |
+| activo | int | Estado activo/inactivo |
+| created_at | timestamp | Fecha de alta |
+
+#### 6.7.4 Flujo Completo de Alta
+
+```
+2a ENTREVISTA = SI (Contratado)
+         |
+         v
++----------------------------------+
+| 1. Buscar primer ID libre >= 1   |
++----------------------------------+
+         |
+         v
++----------------------------------+
+| 2. Crear registro en operadores  |
+|    - Datos personales            |
+|    - Login = ID                  |
+|    - Contraseña pendiente        |
++----------------------------------+
+         |
+         v
++----------------------------------+
+| 3. Enviar EMAIL BIENVENIDA       |
+|    - Usuario: ID                 |
+|    - Enlace crear contraseña     |
++----------------------------------+
+         |
+         v
++----------------------------------+
+| 4. Trabajador accede al portal   |
+|    - Crea su contraseña          |
+|    - Acceso completo             |
++----------------------------------+
+```
+
+#### 6.7.5 Ejemplos de Trabajadores
+
+| ID | Nombre | Apellido |
+|----|--------|----------|
+| 175 | Dolores | Morales |
+| 189 | Jesus Javier | Raya |
+| 194 | Virginia | Jimenez |
+| 597 | Haydee Lucia | Maltez |
+
+#### 6.7.6 Alerta Automatica - Contratacion Completada
+
+**Trigger:** Se asigna ID al nuevo trabajador
+
+**Destinatarios:**
+- Gerente
+- Director RRHH
+- (Otros configurables)
+
+**Contenido de la alerta:**
+```
+[NOMBRE APELLIDO] ha concluido el proceso de seleccion
+
+Notas de las entrevistas:
+- 1a Entrevista: [NOTAS_1A_ENTREVISTA]
+- 2a Entrevista: [NOTAS_2A_ENTREVISTA]
+
+Curriculum adjunto: [CV.pdf]
+```
+
+### 6.8 Primer Acceso - Datos Obligatorios
+
+Cuando el trabajador accede por primera vez al portal, debe completar los siguientes datos:
+
+#### 6.8.1 Campos Obligatorios
+
+| Campo | Tipo | Validacion |
+|-------|------|------------|
+| Nombre | texto | Obligatorio |
+| Apellido 1 | texto | Obligatorio |
+| Apellido 2 | texto | Obligatorio |
+| Fecha de nacimiento | fecha | Obligatorio |
+| Telefono | texto | Obligatorio |
+| Email | email | Obligatorio, formato valido |
+| Direccion | texto | Obligatorio |
+| Codigo postal | texto | Obligatorio, 5 digitos |
+| Ciudad | texto | Obligatorio |
+| DNI | texto | Obligatorio, formato valido |
+| Numero afiliacion SS | texto | Obligatorio |
+| Numero cuenta bancaria | IBAN | Obligatorio, **verificacion especial** |
+
+#### 6.8.2 Verificacion Cuenta Bancaria - Proteccion Anti-Fraude
+
+Para evitar fraude, la cuenta bancaria requiere doble verificacion:
+
+**Paso 1 - Trabajador:**
+```
++----------------------------------+
+| Campo: Numero de cuenta (IBAN)   |
+| ES12 3456 7890 1234 5678 9012    |
++----------------------------------+
+         |
+         v
++----------------------------------+
+| Subir PDF del banco              |
+| (extracto, certificado bancario) |
+| [documento_banco.pdf]            |
++----------------------------------+
+```
+
+**Paso 2 - Persona que paga nominas:**
+```
++----------------------------------+
+| Ver PDF adjunto                  |
+| Comparar numero cuenta           |
+| [✓] Verificado                   |
++----------------------------------+
+```
+
+#### 6.8.3 Estados de Verificacion Cuenta
+
+| Estado | Significado |
+|--------|-------------|
+| Pendiente | PDF subido, esperando verificacion |
+| Verificado | Numero coincide con documento (check marcado) |
+| Rechazado | No coincide, trabajador debe corregir |
+
+#### 6.8.4 Flujo Completo - Primer Acceso
+
+```
+EMAIL BIENVENIDA (Usuario + Enlace)
+         |
+         v
+Trabajador crea contraseña
+         |
+         v
+Completa datos obligatorios:
+- Nombre, Apellidos
+- Fecha nacimiento
+- Telefono, Email
+- Direccion, CP, Ciudad
+- DNI, Nº Afiliacion SS
+         |
+         v
+Introduce cuenta bancaria (IBAN)
+         |
+         v
+Sube PDF del banco
+         |
+         v
+PERSONA QUE PAGA NOMINAS
+         |
+         v
+Verifica PDF vs Numero cuenta
+         |
+         v
+[✓] Check = CUENTA VALIDADA
+```
 
 ---
 
@@ -1228,13 +1788,32 @@ Ordenadas por dia y hora.
 
 ### 10.1 Pantalla 1: Panel Principal
 
-Resumen de tareas pendientes ordenadas por prioridad + entrevistas del dia.
+Resumen de tareas pendientes **ordenadas por urgencia** (mas urgente primero).
 
 ```
 +--------------------------------------------------+
+|  PENDIENTE LLAMAR CONTRATADO                     |
++--------------------------------------------------+
+|  Carmen Lopez - PESCADERIA                       |
++--------------------------------------------------+
+
++--------------------------------------------------+
+|  PENDIENTE LLAMAR CODIGOS Y 2a ENTREVISTA        |
++--------------------------------------------------+
+|  Manuel Perez - PESCADERIA                       |
++--------------------------------------------------+
+
++--------------------------------------------------+
+|  ENTREVISTAS DE HOY                              |
++--------------------------------------------------+
+|  10:00  Adela Ruano - PESCADERIA - 1a  [ v ]     |
+|  11:30  Angel Garcia - LOGISTICA - 1a  [ v ]     |
+|  16:00  Pedro Gomez - PESCADERIA - 2a  [ v ]     |
++--------------------------------------------------+
+
++--------------------------------------------------+
 |  LLAMADAS PARA ENTREVISTAS                       |
 +--------------------------------------------------+
-|                                                  |
 |  [!] MUY ALTA                                    |
 |      Dependiente/a de Pescaderia .......... 15   |
 |                                                  |
@@ -1243,22 +1822,14 @@ Resumen de tareas pendientes ordenadas por prioridad + entrevistas del dia.
 |                                                  |
 |  [ ] MEDIA                                       |
 |      Becario Administracion ............... 3    |
-|                                                  |
-+--------------------------------------------------+
-
-+--------------------------------------------------+
-|  ENTREVISTAS DE HOY                              |
-+--------------------------------------------------+
-|                                                  |
-|  10:00  Adela Ruano - PESCADERIA - 1a  [ v ]     |
-|  11:30  Angel Garcia - LOGISTICA - 1a  [ v ]     |
-|  16:00  Carmen Lopez - PESCADERIA - 2a [ v ]     |
-|                                                  |
 +--------------------------------------------------+
 ```
 
-- Clic en Llamadas → abre Pantalla 2 (Llamadas por Perfil)
-- Entrevistas de Hoy → para gestionar con el Entrevistador cuando llegue el candidato
+**Orden de urgencia (de mas a menos):**
+1. Contratado - cerrar incorporacion
+2. Codigos y 2a Entrevista - candidatos listos para avanzar
+3. Entrevistas de Hoy - gestionar llegadas
+4. Llamadas para Entrevistas - concertar citas nuevas
 
 **Desplegable en Entrevistas de Hoy:**
 - **Presentado** → El candidato ha llegado, pasa al Entrevistador

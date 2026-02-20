@@ -4,26 +4,162 @@
 
 ### 1.1 Flujo de Contratacion
 
-Cuando un candidato pasa a CONTRATADO, se crea automaticamente un registro en la tabla `operadores` del ERP.
+Cuando un candidato pasa a CONTRATADO (2a Entrevista = Si), se crea automaticamente un registro en la tabla `operadores` del ERP.
 
 ```
-CONTRATADO (seleccion)
+2a ENTREVISTA = SI (Contratado)
          |
          v
-+---------------------------+
-| Crear registro en         |
-| tabla OPERADORES (ERP)    |
-| ID automatico             |
-+---------------------------+
++----------------------------------+
+| 1. Buscar primer ID libre >= 1   |
+|    (reutiliza huecos)            |
++----------------------------------+
          |
          v
-+---------------------------+
-| Candidato ahora es        |
-| EMPLEADO en el sistema    |
-+---------------------------+
++----------------------------------+
+| 2. Crear registro en operadores  |
+|    - Datos del candidato         |
+|    - Login = ID                  |
+|    - Contraseña pendiente        |
++----------------------------------+
+         |
+         v
++----------------------------------+
+| 3. Enviar EMAIL BIENVENIDA       |
+|    - Usuario: ID                 |
+|    - Enlace crear contraseña     |
++----------------------------------+
+         |
+         v
++----------------------------------+
+| 4. Trabajador accede al portal   |
+|    - Crea su contraseña          |
+|    - Portal de trabajadores      |
++----------------------------------+
 ```
 
-### 1.2 Mapeo de Campos: candidatos → operadores
+### 1.2 Asignacion de ID de Trabajador
+
+**Tabla:** `operadores`
+**Servidor:** gestion.pescadoslacarihuela.es
+
+**Regla de asignacion:**
+- Se busca el primer ID libre desde 1
+- Si hay huecos en la numeracion, se reutilizan
+- Ejemplo: Si IDs [1,2,_,4,5] → Asigna 3
+
+**Ejemplos de trabajadores:**
+
+| ID | Nombre | Apellido |
+|----|--------|----------|
+| 175 | Dolores | Morales |
+| 189 | Jesus Javier | Raya |
+| 194 | Virginia | Jimenez |
+| 597 | Haydee Lucia | Maltez |
+
+### 1.3 Primer Acceso del Trabajador
+
+Cuando el trabajador recibe el email de bienvenida con su ID, debe acceder al portal y completar información obligatoria.
+
+#### 1.3.1 Datos Obligatorios Primer Acceso
+
+| # | Campo | Descripcion | Tipo | Obligatorio |
+|---|-------|-------------|------|-------------|
+| 1 | Nombre | Nombre del trabajador | VARCHAR | SI |
+| 2 | Apellido 1 | Primer apellido | VARCHAR | SI |
+| 3 | Apellido 2 | Segundo apellido | VARCHAR | SI |
+| 4 | Fecha de nacimiento | DD/MM/AAAA | DATE | SI |
+| 5 | Telefono | Movil de contacto | VARCHAR | SI |
+| 6 | Email | Correo electronico | VARCHAR | SI |
+| 7 | Direccion | Domicilio completo | VARCHAR | SI |
+| 8 | Codigo postal | CP | CHAR(5) | SI |
+| 9 | Ciudad | Municipio/Localidad | VARCHAR | SI |
+| 10 | DNI/NIE | Documento de identidad | VARCHAR | SI |
+| 11 | Numero Afiliacion SS | NAF Seguridad Social | VARCHAR | SI |
+| 12 | Cuenta bancaria | IBAN para nominas | VARCHAR | SI |
+
+#### 1.3.2 Verificacion Cuenta Bancaria (Anti-Fraude)
+
+Para evitar fraudes, la cuenta bancaria requiere verificacion manual:
+
+```
+TRABAJADOR INTRODUCE CUENTA BANCARIA
+         |
+         v
++----------------------------------+
+| 1. Repetir numero de cuenta      |
+|    (doble entrada)               |
++----------------------------------+
+         |
+         v
++----------------------------------+
+| 2. Subir PDF del banco           |
+|    (extracto o certificado       |
+|     que muestre titular + IBAN)  |
++----------------------------------+
+         |
+         v
++----------------------------------+
+| 3. Estado: PENDIENTE VERIFICAR   |
++----------------------------------+
+         |
+         v
++----------------------------------+
+| 4. Persona de nominas revisa     |
+|    - Comprueba PDF               |
+|    - Verifica titular = trabajador|
+|    - Verifica IBAN coincide      |
++----------------------------------+
+         |
+         v
++----------------------------------+
+| 5. CHECK de verificacion         |
+|    Estado: CUENTA VERIFICADA     |
++----------------------------------+
+```
+
+**Responsable verificacion:** Persona que gestiona las nominas
+
+**Campos en BD:**
+| Campo | Descripcion |
+|-------|-------------|
+| cuenta_iban | IBAN introducido |
+| cuenta_pdf | Ruta al PDF subido |
+| cuenta_verificada | BOOLEAN (0/1) |
+| cuenta_verificada_por | ID usuario que verifico |
+| cuenta_verificada_fecha | Timestamp verificacion |
+
+#### 1.3.3 Alerta Contratacion Completada
+
+Cuando se asigna el ID al trabajador, se envia automaticamente una alerta:
+
+```
+ASIGNACION ID TRABAJADOR
+         |
+         v
++----------------------------------+
+| ALERTA AUTOMATICA                |
+| Destinatarios:                   |
+| - Gerente                        |
+| - Director RRHH                  |
++----------------------------------+
+         |
+         v
++----------------------------------+
+| Contenido:                       |
+| "Manuel Lopez ha concluido el    |
+|  proceso de seleccion"           |
+|                                  |
+| + Notas de la entrevista         |
+| + CV adjunto                     |
++----------------------------------+
+```
+
+**Codigo alerta:** `ALERT_002`
+
+---
+
+### 1.4 Mapeo de Campos: candidatos → operadores
 
 | Campo CANDIDATOS | Campo OPERADORES | Tipo |
 |------------------|------------------|------|
@@ -46,15 +182,124 @@ CONTRATADO (seleccion)
 
 ## 2. Datos del Contrato
 
-### 2.1 Campos que completa el Director RRHH
+### 2.1 Campos que completa el Director RRHH / Gerente
 
-| # | Campo | Descripcion | Tipo | Ejemplo |
-|---|-------|-------------|------|---------|
-| 1 | Horas | Horas semanales de trabajo | INT | 40, 35, 20 |
-| 2 | Tipo de horario | Tipo de jornada/turno | ENUM | Mañana, Tarde, Partido, Rotativo |
-| 3 | Categoria profesional | Categoria segun convenio | FK | Oficial 1a, Peon, Administrativo |
-| 4 | Fecha desde | Fecha inicio del contrato | DATE | 01/03/2026 |
-| 5 | Fecha hasta | Fecha fin del contrato (si temporal) | DATE | 01/09/2026 o NULL (indefinido) |
+Cuando el Director RRHH o Gerente recibe la alerta de contratacion completada, entra en la ficha del trabajador y debe completar los siguientes campos:
+
+| # | Campo | Abrev. | Descripcion | Tipo | Obligatorio |
+|---|-------|--------|-------------|------|-------------|
+| 1 | Contrato Desde | Cto Desde | Fecha inicio del contrato | DATE | SI |
+| 2 | Contrato Hasta | Cto Hasta | Fecha fin (- si indefinido) | DATE | NO |
+| 3 | Categoria | Cat | Categoria profesional (T0, T1, T2, T3) | FK | SI |
+| 4 | Horas | Hrs | Horas semanales | INT | SI |
+| 5 | Codigo | Cod | Codigo de contrato | VARCHAR | SI |
+| 6 | Tipo | Tipo | Temporal, Prorroga, Sustituc., Indefinido | ENUM | SI |
+| 7 | Sustitucion | Sust | Persona sustituida (- si no aplica) | FK | Solo si Tipo=Sustituc. |
+| 8 | Validez Desde | Val Desde | Fecha desde que aplica esta linea | DATE | SI |
+| 9 | Validez Hasta | Val Hasta | Fecha hasta que aplica (- si indefinido) | DATE | NO |
+
+**Campos calculados automaticamente:**
+| Campo | Abrev. | Descripcion |
+|-------|--------|-------------|
+| Duracion Contrato | Dur.Cto | Duracion total del contrato actual |
+| Duracion Condicion | Dur.Cond | Duracion de las condiciones actuales |
+| Acciones | Acciones | Estado de firmas (H D T) |
+
+#### 2.1.1 Ejemplo Visual - Ficha Contrato (Sustitucion A.Garcia)
+
+```
++============================================================================+
+|  FICHA CONTRATO - DATOS A COMPLETAR                                        |
++============================================================================+
+|                                                                             |
+|  Contrato Desde:   [01/06/2026]                                             |
+|                                                                             |
+|  Contrato Hasta:   [31/08/2026]                                             |
+|                                                                             |
+|  Categoria:        [T1                      v]                              |
+|                                                                             |
+|  Horas semanales:  [30]                                                     |
+|                                                                             |
+|  Codigo:           [150]                                                    |
+|                                                                             |
+|  Tipo:             [Sustituc.               v]                              |
+|                                                                             |
+|  Sustitucion:      [A.Garcia                v]                              |
+|                                                                             |
+|  Validez Desde:    [01/06/2026]                                             |
+|                                                                             |
+|  Validez Hasta:    [31/08/2026]                                             |
+|                                                                             |
+|  -----------------------------------------------------------------------    |
+|  CAMPOS CALCULADOS:                                                         |
+|  Dur.Cto:          3m                                                       |
+|  Dur.Cond:         3m                                                       |
+|  Acciones:         H D T                                                    |
+|  -----------------------------------------------------------------------    |
+|                                                                             |
+|  [GUARDAR]                                                                  |
+|                                                                             |
++============================================================================+
+```
+
+#### 2.1.2 Resultado en Historial de Contratos
+
+```
+┌───┬────────────┬────────────┬─────┬─────┬─────┬────────────┬───────────┬────────────┬────────────┬─────────┬──────────┬──────────┐
+│ # │ Cto Desde  │ Cto Hasta  │ Cat │ Hrs │ Cod │    Tipo    │   Sust    │ Val Desde  │ Val Hasta  │ Dur.Cto │ Dur.Cond │ Acciones │
+├───┼────────────┼────────────┼─────┼─────┼─────┼────────────┼───────────┼────────────┼────────────┼─────────┼──────────┼──────────┤
+│ 6 │ 01/06/2026 │ 31/08/2026 │ T1  │ 30  │ 150 │ Sustituc.  │ A.Garcia  │ 01/06/2026 │ 31/08/2026 │ 3m      │ 3m       │ H D T    │
+└───┴────────────┴────────────┴─────┴─────┴─────┴────────────┴───────────┴────────────┴────────────┴─────────┴──────────┴──────────┘
+```
+
+#### 2.1.3 Flujo tras Guardar - Comunicaciones Automaticas
+
+```
+DIRECTOR RRHH / GERENTE guarda datos
+         |
+         v
++------------------------------------------+
+| ALERTA 1: HERMI (Asesor SS)              |
+| "Tienes informacion para un nuevo        |
+|  contrato a nombre Manuel Lopez"         |
+|                                          |
+| + Cto Desde: 01/06/2026                  |
+| + Cto Hasta: 31/08/2026                  |
+| + Categoria: T1                          |
+| + Horas: 30                              |
+| + Codigo: 150                            |
+| + Tipo: Sustituc.                        |
+| + Sustituye a: A.Garcia                  |
++------------------------------------------+
+         |
+         v
++------------------------------------------+
+| COMUNICACION 2: CARLOS + SUPERVISORES    |
+| "Manuel Lopez ha sido contratado"        |
+|                                          |
+| + Experiencia: 3 años pescaderia         |
+| + Telefono: 657 XXX XXX                  |
+| + Fecha comienzo: 01/06/2026             |
+| + Categoria: T1                          |
+| + Horas: 30                              |
+| + Tipo: Sustitucion de A.Garcia          |
+|                                          |
+| NOTAS ENTREVISTAS:                       |
+| Candidato con buena actitud. Conoce      |
+| bien el producto. Disponibilidad         |
+| inmediata.                               |
++------------------------------------------+
+```
+
+**Destinatarios Comunicacion 2:**
+| Destinatario | Rol |
+|--------------|-----|
+| Carlos | Supervisor general |
+| Supervisores de tienda | Responsables de cada punto de venta |
+
+**Codigo alertas:**
+- ALERT_003: Alerta Hermi nuevo contrato
+- ALERT_004: Comunicacion nuevo empleado (Carlos + Supervisores)
 
 ### 2.2 Campos que completa Hermi (Asesor SS)
 
@@ -462,6 +707,288 @@ CALL sp_contratar_candidato(
     @operador_id,             -- OUT: ID operador creado
     @contrato_id              -- OUT: ID contrato creado
 );
+```
+
+---
+
+## 11. Portal del Trabajador
+
+El Portal del Trabajador es un espacio personal accesible desde cualquier lugar (no requiere estar fisicamente en la empresa). El trabajador solo ve informacion que le afecta directamente, no relacionada con la tienda.
+
+### 11.1 Menu Principal
+
+```
++============================================+
+|  PORTAL DEL TRABAJADOR                     |
++============================================+
+|                                            |
+|  1. Dashboard - Tareas Pendientes          |
+|  2. Documentos                             |
+|  3. Contratos                              |
+|  4. Horario                                |
+|  5. Pedidos                                |
+|                                            |
++============================================+
+```
+
+### 11.2 Estructura de Documentos
+
+```
+2. DOCUMENTOS
+   |
+   +-- 2.1 Documentos Personales
+   |       (DNI, cuenta bancaria, NAF, direccion...)
+   |
+   +-- 2.2 Documentos Empresa
+   |       |
+   |       +-- Riesgos Laborales
+   |       |       - EPI
+   |       |       - Formacion
+   |       |       - Informacion
+   |       |
+   |       +-- Proteccion de Datos
+   |       |       - Politica
+   |       |       - Confidencialidad
+   |       |       - Banco
+   |       |       - Imagen
+   |       |       - Material
+   |       |
+   |       +-- Protocolos
+   |               - Identi. Acoso
+   |
+   +-- 2.3 Carnets / Habilitaciones
+   |       |
+   |       +-- Para TODOS:
+   |       |       - Carnet Manipulador
+   |       |       - Reconocimiento Medico
+   |       |
+   |       +-- Solo LOGISTICA (L0, L1):
+   |               - Carnet B
+   |               - Carnet C
+   |               - CAP
+   |               - Carretillero
+   |
+   +-- 2.4 Formacion
+           (Formacion especifica del puesto)
+```
+
+### 11.3 Contratos
+
+El trabajador puede ver su historial de contratos con todas las lineas (temporales, prorrogas, modificaciones, etc.)
+
+### 11.4 Horario
+
+El trabajador puede consultar su horario asignado.
+
+### 11.5 Pedidos
+
+El trabajador puede realizar solicitudes a traves de esta seccion.
+
+#### 11.5.1 Tipos de Pedidos
+
+| Tipo | Descripcion | Documento |
+|------|-------------|-----------|
+| Permiso puntual | Salir antes, llegar tarde, cita medica... | **Obligatorio** |
+| Preferencia de turno | Solicitar horario especifico por periodo | Opcional |
+| Representacion sindical | Horas sindicales (solo representantes) | **Obligatorio** |
+
+#### 11.5.2 Formulario Permiso Puntual
+
+```
++============================================================+
+|  PERMISO PUNTUAL                                           |
++============================================================+
+|                                                            |
+|  Fecha:              [27/02/2026]                          |
+|                                                            |
+|  Horario desde:      [12:00]                               |
+|                                                            |
+|  Horario hasta:      [14:00] (o fin jornada)               |
+|                                                            |
+|  Motivo:             [Cita medica            v]            |
+|                                                            |
+|  Documento:          [Seleccionar archivo...] *Obligatorio |
+|                                                            |
+|  [ENVIAR SOLICITUD]                                        |
+|                                                            |
++============================================================+
+```
+
+#### 11.5.3 Formulario Preferencia de Turno
+
+```
++============================================================+
+|  PREFERENCIA DE TURNO                                      |
++============================================================+
+|                                                            |
+|  Fecha desde:        [01/03/2026]                          |
+|                                                            |
+|  Fecha hasta:        [06/03/2026]                          |
+|                                                            |
+|  Horario preferido:  [Mañanas                v]            |
+|                                                            |
+|  Motivo:             [________________________]            |
+|                      [________________________]            |
+|                                                            |
+|  Documento:          [Seleccionar archivo...] (Opcional)   |
+|                                                            |
+|  [ENVIAR SOLICITUD]                                        |
+|                                                            |
++============================================================+
+```
+
+#### 11.5.4 Formulario Representacion Sindical
+
+```
++============================================================+
+|  PERMISO REPRESENTACION SINDICAL                           |
++============================================================+
+|                                                            |
+|  Dias solicitados:                                         |
+|  +------------------------------------------------------+  |
+|  | Fecha        | Hora desde | Hora hasta |    Accion   |  |
+|  +------------------------------------------------------+  |
+|  | 01/03/2026   | 09:00      | 14:00      |    [x]      |  |
+|  | 02/03/2026   | 11:00      | 15:00      |    [x]      |  |
+|  |              |            |            |    [+]      |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  Documento:          [Seleccionar archivo...] *Obligatorio |
+|                                                            |
+|  [ENVIAR SOLICITUD]                                        |
+|                                                            |
++============================================================+
+```
+
+### 11.6 Vacaciones
+
+#### 11.6.1 Informacion General
+
+| Campo | Valor |
+|-------|-------|
+| **Tabla BD** | `nuevo_carihuela_jorge_vacaciones` |
+| **Codigo incidencia** | ID 65 = Vacaciones (Vac) |
+| **Total anual** | 30 dias/año |
+| **Periodos** | Invierno (15 dias) + Verano (15 dias) |
+
+#### 11.6.2 Estados de Vacaciones
+
+| Estado | Descripcion |
+|--------|-------------|
+| ASIGNADAS | Vacaciones ya confirmadas, muestra periodo |
+| PERIODO_ABIERTO | Periodo de solicitud abierto, muestra formulario |
+| PENDIENTE | Solicitud enviada, esperando aprobacion |
+| APROBADA | Vacaciones aprobadas |
+| RECHAZADA | Solicitud rechazada |
+| CANCELADA | Vacaciones canceladas |
+
+#### 11.6.3 Reglas de Solicitud
+
+**Regla principal:** Las vacaciones empiezan en **LUNES**
+
+**Excepciones:**
+| Excepcion | Descripcion |
+|-----------|-------------|
+| Semana 0 | Primera semana del año (puede empezar cualquier dia) |
+| Lunes festivo | Empieza el siguiente dia laborable |
+
+#### 11.6.4 Posibilidades de Solicitud (por periodo de 15 dias)
+
+| Posibilidad | Descripcion | Ejemplo |
+|-------------|-------------|---------|
+| **Posibilidad 1** | 1 periodo de 15 dias | 23/02 al 09/03 (15 dias) |
+| **Posibilidad 2** | 2 periodos (8 + 7 dias) | 16/02 al 23/02 (8 dias) + otro (7 dias) |
+
+#### 11.6.5 Ejemplos Verificados
+
+```
+┌─────┬────────────────────────────────┬────────────┬────────────┬──────┬─────────────┐
+│ ID  │ Trabajador                     │ Desde      │ Hasta      │ Dias │ Dia semana  │
+├─────┼────────────────────────────────┼────────────┼────────────┼──────┼─────────────┤
+│ 111 │ Moraleda Cerrato, Cristina     │ 16/02/2026 │ 23/02/2026 │ 8    │ LUNES ✓     │
+│ 213 │ Castro Rodriguez, Nicolas      │ 23/02/2026 │ 09/03/2026 │ 15   │ LUNES ✓     │
+└─────┴────────────────────────────────┴────────────┴────────────┴──────┴─────────────┘
+```
+
+#### 11.6.6 Formulario Solicitud Vacaciones (Posibilidad 1)
+
+```
++============================================================+
+|  SOLICITUD VACACIONES - VERANO 2026                        |
++============================================================+
+|                                                            |
+|  Periodo disponible: 15 dias                               |
+|                                                            |
+|  Seleccione modalidad:                                     |
+|  (x) Posibilidad 1: 1 periodo de 15 dias                   |
+|  ( ) Posibilidad 2: 2 periodos (8 + 7 dias)                |
+|                                                            |
+|  --------------------------------------------------------  |
+|  PERIODO 1:                                                |
+|  Fecha inicio:  [23/02/2026] (Lunes)                       |
+|  Fecha fin:     [09/03/2026] (auto-calculado)              |
+|  Dias:          15                                         |
+|  --------------------------------------------------------  |
+|                                                            |
+|  [ENVIAR SOLICITUD]                                        |
+|                                                            |
++============================================================+
+```
+
+#### 11.6.7 Formulario Posibilidad 2 (8 + 7 dias)
+
+```
++============================================================+
+|  SOLICITUD VACACIONES - VERANO 2026                        |
++============================================================+
+|                                                            |
+|  Seleccione modalidad:                                     |
+|  ( ) Posibilidad 1: 1 periodo de 15 dias                   |
+|  (x) Posibilidad 2: 2 periodos (8 + 7 dias)                |
+|                                                            |
+|  --------------------------------------------------------  |
+|  PERIODO 1 (8 dias):                                       |
+|  Fecha inicio:  [16/02/2026] (Lunes)                       |
+|  Fecha fin:     [23/02/2026] (auto-calculado)              |
+|  --------------------------------------------------------  |
+|  PERIODO 2 (7 dias):                                       |
+|  Fecha inicio:  [__/__/____] (Debe ser Lunes)              |
+|  Fecha fin:     [__/__/____] (auto-calculado)              |
+|  --------------------------------------------------------  |
+|                                                            |
+|  [ENVIAR SOLICITUD]                                        |
+|                                                            |
++============================================================+
+```
+
+#### 11.6.8 Vista Vacaciones Asignadas
+
+```
++============================================================+
+|  MIS VACACIONES 2026                                       |
++============================================================+
+|                                                            |
+|  INVIERNO:                                                 |
+|  +------------------------------------------------------+  |
+|  | Periodo          | Dias | Estado                     |  |
+|  +------------------------------------------------------+  |
+|  | 16/02 - 23/02    | 8    | APROBADA                   |  |
+|  | 02/03 - 08/03    | 7    | APROBADA                   |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  VERANO:                                                   |
+|  +------------------------------------------------------+  |
+|  | Periodo          | Dias | Estado                     |  |
+|  +------------------------------------------------------+  |
+|  | 01/06 - 15/06    | 15   | PENDIENTE                  |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  RESUMEN ANUAL:                                            |
+|  - Dias correspondientes: 30                               |
+|  - Dias solicitados:      30                               |
+|  - Dias pendientes:       0                                |
+|                                                            |
++============================================================+
 ```
 
 ---
